@@ -4,11 +4,7 @@ bool ShootLayer::init() {
 	if (!Layer::init()) {
 		return false;
 	}
-	
-
-
 	return true;
-
 }
 
 

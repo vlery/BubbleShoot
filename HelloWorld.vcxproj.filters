@@ -10,28 +10,46 @@
     <Filter Include="src">
       <UniqueIdentifier>{bb6c862e-70e9-49d9-81b7-3829a6f50471}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\head">
+      <UniqueIdentifier>{8be3e453-5b19-4178-a2a2-2b237f731635}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\source">
+      <UniqueIdentifier>{31e59618-062d-40cf-a065-8e27d79e8ca1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>win32</Filter>
     </ClCompile>
     <ClCompile Include="..\Classes\AppDelegate.cpp">
-      <Filter>src</Filter>
+      <Filter>src\source</Filter>
     </ClCompile>
-    <ClCompile Include="..\Classes\HelloWorldScene.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="FirstLayer.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="GameScene.cpp">
-      <Filter>src</Filter>
+    <ClCompile Include="BubbleLayer.cpp">
+      <Filter>src\source</Filter>
     </ClCompile>
     <ClCompile Include="BubbleNode.cpp">
-      <Filter>src</Filter>
+      <Filter>src\source</Filter>
+    </ClCompile>
+    <ClCompile Include="FirstLayer.cpp">
+      <Filter>src\source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameScene.cpp">
+      <Filter>src\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\HelloWorldScene.cpp">
+      <Filter>src\source</Filter>
     </ClCompile>
     <ClCompile Include="HexMap.cpp">
-      <Filter>src</Filter>
+      <Filter>src\source</Filter>
+    </ClCompile>
+    <ClCompile Include="Bulk.cpp">
+      <Filter>src\source</Filter>
+    </ClCompile>
+    <ClCompile Include="ShootLayer.cpp">
+      <Filter>src\source</Filter>
+    </ClCompile>
+    <ClCompile Include="BubbleFactory.cpp">
+      <Filter>src\source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -39,22 +57,37 @@
       <Filter>win32</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\AppDelegate.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Classes\HelloWorldScene.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="FirstLayer.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="GameScene.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="HexMap.h">
-      <Filter>src</Filter>
+      <Filter>src\head</Filter>
     </ClInclude>
     <ClInclude Include="BubbleNode.h">
-      <Filter>src</Filter>
+      <Filter>src\head</Filter>
+    </ClInclude>
+    <ClInclude Include="FirstLayer.h">
+      <Filter>src\head</Filter>
+    </ClInclude>
+    <ClInclude Include="GameScene.h">
+      <Filter>src\head</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\HelloWorldScene.h">
+      <Filter>src\head</Filter>
+    </ClInclude>
+    <ClInclude Include="HexMap.h">
+      <Filter>src\head</Filter>
+    </ClInclude>
+    <ClInclude Include="BubbleLayer.h">
+      <Filter>src\head</Filter>
+    </ClInclude>
+    <ClInclude Include="ShootLayer.h">
+      <Filter>src\head</Filter>
+    </ClInclude>
+    <ClInclude Include="Bulk.h">
+      <Filter>src\head</Filter>
+    </ClInclude>
+    <ClInclude Include="BubbleType.h">
+      <Filter>src\head</Filter>
+    </ClInclude>
+    <ClInclude Include="BubbleFactory.h">
+      <Filter>src\head</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

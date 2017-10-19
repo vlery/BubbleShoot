@@ -148,20 +148,29 @@ xcopy "$(ProjectDir)..\Resources" "$(OutDir)" /D /E /I /F /Y
   <ItemGroup>
     <ClCompile Include="..\Classes\AppDelegate.cpp" />
     <ClCompile Include="..\Classes\HelloWorldScene.cpp" />
+    <ClCompile Include="BubbleFactory.cpp" />
+    <ClCompile Include="BubbleLayer.cpp" />
     <ClCompile Include="BubbleNode.cpp" />
+    <ClCompile Include="Bulk.cpp" />
     <ClCompile Include="FirstLayer.cpp" />
     <ClCompile Include="GameScene.cpp" />
     <ClCompile Include="HexMap.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ShootLayer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Classes\AppDelegate.h" />
     <ClInclude Include="..\Classes\HelloWorldScene.h" />
+    <ClInclude Include="BubbleFactory.h" />
     <ClInclude Include="BubbleNode.h" />
+    <ClInclude Include="BubbleType.h" />
+    <ClInclude Include="Bulk.h" />
     <ClInclude Include="FirstLayer.h" />
     <ClInclude Include="GameScene.h" />
     <ClInclude Include="HexMap.h" />
     <ClInclude Include="main.h" />
+    <ClInclude Include="BubbleLayer.h" />
+    <ClInclude Include="ShootLayer.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\cocos2d\cocos\2d\libcocos2d.vcxproj">

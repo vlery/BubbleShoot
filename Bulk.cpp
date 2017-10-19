@@ -28,6 +28,7 @@ void Bulk::detach(BubbleNode* bubble) {
 void Bulk::destoryBubbles() {
 	for (auto it = bubbles.begin(); it != bubbles.end(); )
 	{
+		(*it)->destorySelf();
 		++it;
 	}
 
@@ -81,4 +82,43 @@ void Bulk::absorb(Bulk* bulk) {
 	}
 	this->bubbles.merge(bulk->bubbles);
 	delete bulk;
+}
+
+
+
+BubbleNode* Bulk::getFirstConnectOuterNode() {
+	connectOutItr = bubbles.begin();
+	while (connectOutItr != bubbles.end()) {
+		BubbleNode* node = (*connectOutItr);
+		for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
+			auto neighbour = node->connect[(int)node->connectType[i]];
+			if (neighbour != nullptr) {
+				if (neighbour->isBubble() || neighbour->getType() == BubbleType::Boundry_Top) {
+					return node;
+				}
+			}
+		}
+		++connectOutItr;
+	}
+	return nullptr;
+}
+bool Bulk::ifHasNextConnectOuterNode() {
+	++connectOutItr;
+	while (connectOutItr != bubbles.end()) {
+		
+		BubbleNode* node = (*connectOutItr);
+		for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
+			auto neighbour = node->connect[(int)node->connectType[i]];
+			if (neighbour != nullptr) {
+				if (neighbour->isBubble() || neighbour->getType() == BubbleType::Boundry_Top) {
+					return true;
+				}
+			}
+		}
+		++connectOutItr;
+	}
+	return false;
+}
+BubbleNode* Bulk::getNextConnectOuterNode() {
+	return *connectOutItr;
 }

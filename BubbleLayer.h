@@ -3,6 +3,7 @@
 #include "cocos2d.h"
 #include "HexMap.h"
 #include <list>
+#include "BubbleFactory.h"
 const static float ANM_TIME = 0.8f;
 const static float SQRT_2 = 1.414f;
 
@@ -24,7 +25,7 @@ public:
 	void processShootBubble(BubbleNode* node);
 	
 
-	void testConnection(BubbleNode* node);
+	void testAttach(BubbleNode* node);
 	void attachBubble(BubbleNode* node, BubbleNode* attachNode);
 	void cleanShootList();
 private:

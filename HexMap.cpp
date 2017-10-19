@@ -8,14 +8,14 @@ HexMap::HexMap(float size, float width, int layer) {
 	ifOffset = false;
 	initBoundry();
 	while (layer > 0) {
-		generateLayer();
+		generateBubbleLayer();
 		layer--;
 	}
 
 }
 
 void HexMap::initBoundry() {
-
+	
 	int rowNum = ifOffset ? (width - size / 2 * SQRT_3) / size : width / size;
 	Vec2 offset_r_b = OFFSET_BOTTOM_RIGHT*size / 2;
 	Vec2 offset_l_b = OFFSET_BOTTOM_LEFT*size / 2;
@@ -28,21 +28,16 @@ void HexMap::initBoundry() {
 	*
 	*/
 	
-	BubbleNode* node00 = new BubbleNode(BubbleType::Boundry_Top, Point(offset_x, size*(SQRT_3-1)/2),Size(size,size));
-	addInList(node00);
-	
+	BubbleNode* node00 = createBubbleToList(BubbleType::Boundry_Top, Point(offset_x, size*(SQRT_3 - 1) / 2));
 	BubbleNode* node01;
 	if (ifOffset) {
-		node01= new BubbleNode(BubbleType::Boundry_Attach, node00->getPosition() + offset_l_b, Size(size, size));
-		addInList(node01);
-		ConnectType type = reflectY(connectDown);
+		node01= createBubbleToList(BubbleType::Boundry_Attach, node00->getPosition() + offset_l_b);
 		node00->connectBubble(reflectY(connectDown), node01);
 	}		
-		node01 = new BubbleNode(BubbleType::Boundry_Attach, node00->getPosition() + offset_r_b, Size(size, size));
-		addInList(node01);
-		node00->connectBubble(connectDown, node01);
+	node01 = createBubbleToList(BubbleType::Boundry_Attach, node00->getPosition() + offset_r_b);
+	node00->connectBubble(connectDown, node01);
 	if (ifOffset) {
-		node00->RightBottom->connectBubble(ConnectType::Left, node00->LeftBottom);
+		node00->connect[(int)ConnectType::RightBottom]->connectBubble(ConnectType::Left, node00->connect[(int)ConnectType::LeftBottom]);
 	}
 
 
@@ -53,15 +48,12 @@ void HexMap::initBoundry() {
 	*
 	*/	
 	for (int i = 1; i < rowNum - 1; ++i) {
-		BubbleNode* node10 = new BubbleNode(BubbleType::Boundry_Top, node00->getPosition() + Vec2(size, 0), Size(size, size));
-		BubbleNode* node11 = new BubbleNode(BubbleType::Boundry_Attach, node01->getPosition() + Vec2(size, 0), Size(size, size));
+		BubbleNode* node10 = createBubbleToList(BubbleType::Boundry_Top, node00->getPosition() + Vec2(size, 0));
+		BubbleNode* node11 = createBubbleToList(BubbleType::Boundry_Attach, node01->getPosition() + Vec2(size, 0));
 		node10->connectBubble(connectDown, node11);
 		node10->connectBubble(ConnectType::Left, node00);
 		node11->connectBubble(ConnectType::Left, node01);
 		node10->connectBubble(reflectY(connectDown), node01);
-		addInList(node10);
-		addInList(node11);
-
 		node00 = node10;
 		node01 = node11;
 	}
@@ -71,23 +63,24 @@ void HexMap::initBoundry() {
 	*	  X  X  O O  ? 
 	*
 	*/
-	BubbleNode* node10 = new BubbleNode(BubbleType::Boundry_Top, node00->getPosition() + Vec2(size, 0),  Size(size, size));
+	BubbleNode* node10 = createBubbleToList(BubbleType::Boundry_Top, node00->getPosition() + Vec2(size, 0));
 	node10->connectBubble(ConnectType::Left, node00);
 	node10->connectBubble(reflectY(connectDown), node01);
-	addInList(node10);
 	
 
 	if (node01->getPosition().x + size * 3 / 2 <= width) {
-		BubbleNode* node11 = new BubbleNode(BubbleType::Boundry_Attach, node01->getPosition() + Vec2(size, 0),  Size(size, size));
-		addInList(node11);
+		BubbleNode* node11 = createBubbleToList(BubbleType::Boundry_Attach, node01->getPosition() + Vec2(size, 0));
 		node10->connectBubble(connectDown, node11);
 		node11->connectBubble(ConnectType::Left, node01);
 	}
-
-
 }
 
-void HexMap::generateLayer() {
+void HexMap::generateRow(std::function<void()> moveDown) {
+	generateBubbleLayer();
+	moveDown();
+}
+
+void HexMap::generateBubbleLayer() {
 	//up-right,up-left
 	Vec2 offset_u_r = OFFSET_UP_RIGHT*size / 2;
 	Vec2 offset_u_l = OFFSET_UP_LEFT*size / 2;
@@ -102,24 +95,25 @@ void HexMap::generateLayer() {
 	*	  X  X  X  X  X
 	*
 	*/
-	auto itr = topBoundries.begin();
+	auto list = BubbleFactory::getFactory().getTopList();
+	auto itr = list.begin();
 	
 	float height_crt_save = (*itr)->getPosition().y;
 	auto ul_pos = (*itr)->getPosition() + offset_u_l;
 	BubbleNode* b00=nullptr;
 
 	if (ul_pos.x >= size / 2) {
-		b00 = new BubbleNode(BubbleType::Boundry_Top, ul_pos, Size(size, size));
-		addInList(b00);
+
+		b00 = createBubbleToList(BubbleType::Boundry_Top, ul_pos);
+			
 	}
 	BubbleNode*  b01=nullptr;
 	BubbleNode* b10;
 	BubbleNode* b11;
 	while (abs((*itr)->getPosition().y - height_crt_save)<0.1) {
 		b10 = *(itr);
-		topBoundries.pop_front();
-		b11 = new BubbleNode(static_cast<BubbleType>(rand()%5), b10->getPosition(), Size(size, size));
-		addInList(b11);
+		BubbleFactory::getFactory().topListPopFront();
+		b11 = createBubbleToList(static_cast<BubbleType>((rand()%13) % 5), b10->getPosition());
 		if (b00 != nullptr) {
 			b11->connectBubble(ConnectType::LeftTop, b00);
 		}
@@ -127,7 +121,7 @@ void HexMap::generateLayer() {
 		auto ur_pos = b10->getPosition() + offset_u_r;
 		if (ur_pos.x <= width - size / 2) {
 			b10->setPositions(ur_pos);
-			addInList(b10);
+			BubbleFactory::getFactory().addInList(b10);
 			b11->connectBubble(ConnectType::RightTop, b10);
 			
 			if (b00 != nullptr) {
@@ -135,35 +129,32 @@ void HexMap::generateLayer() {
 			}
 		}
 		else {
-			delete b10; break;
+			b10->removeAllConnection();
+			BubbleFactory::getFactory().recycle(b10);
+			break;
 		}
 		b01 = b11;
 		b00 = b10;
-
-		itr	= topBoundries.begin();
+		list = BubbleFactory::getFactory().getTopList();
+		itr	= list.begin();
 	}
 
 
 	
 }
 
-void HexMap::generateRow(std::function<void()> moveDown) {
-	generateLayer();
-	moveDown();
-}
-
-void HexMap::addInList( BubbleNode* node) {
-	switch (node->getType() ){
-	case BubbleType::Boundry_Top: 
-		topBoundries.push_back(node); return;
-	case BubbleType::Boundry_Attach:
-		potentialAttachPositions.push_back(node); return;
-	default:
-		bubbles.push_back(node);
-		node->registerBulk();
-		return;
-	}
+BubbleNode* HexMap::createBubbleToList(BubbleType type, Point pos) {
+	auto node=BubbleFactory::getFactory().generateBubble(type, pos, Size(size, size));
+	node->setBubbleState(BubbleState::ATTACH);
+	BubbleFactory::getFactory().addInList(node);
+	return node;
 }
 
 
-
+BubbleNode* HexMap::generateAttachReplace(BubbleNode* replace) {
+	BubbleNode* node = createBubbleToList(BubbleType::Boundry_Attach, replace->getPosition());
+	
+	node->extendStrongConnectionFrom(replace);
+	
+	return node;
+}

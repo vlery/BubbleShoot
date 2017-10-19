@@ -14,7 +14,7 @@ public:
 		--connection;
 	}
 
-
+	int getConnection() { return connection; }
 	void attach(BubbleNode* bubble);
 	void detach(BubbleNode* bubble);
 	void detachAll();
@@ -27,11 +27,20 @@ public:
 	int getNodeNum() {
 		return nodeNum;
 	}
+	std::list<BubbleNode*> getAttachedBubble() {
+		return bubbles;
+	}
+
+	BubbleNode* getFirstConnectOuterNode();
+	bool ifHasNextConnectOuterNode();
+	BubbleNode* getNextConnectOuterNode();
+
 private:
 	std::list<BubbleNode*> bubbles;
 	BubbleType type;
 	int connection;
 	int nodeNum;
+	std::list<BubbleNode*>::iterator connectOutItr;
 };
 
 

@@ -24,7 +24,7 @@ void BubbleLayer::update(float delta) {
 						node->velocity.x *= -1;
 					}
 					node->moveForward();
-					this->testConnection(node);
+					this->testAttach(node);
 			}
 		});
 		this->cleanShootList();
@@ -46,8 +46,8 @@ void BubbleLayer::initBubbles(int bubbleSize,int layer) {
 }
 void BubbleLayer::addBubbles() {
 
-
-	std::list<BubbleNode*> list = hexmap->getBubblesList();
+	removeAllChildren();
+	auto list =BubbleFactory::getFactory().getBubblesList();
 	std::for_each(list.begin(), list.end(), [=](BubbleNode* node) {
 		if (node->getBubble()->getParent() == nullptr) {
 			addChild(node->getBubble());
@@ -56,7 +56,7 @@ void BubbleLayer::addBubbles() {
 	);
 
 
-	list = hexmap->getAttachList();
+	list = BubbleFactory::getFactory().getAttachList();
 	std::for_each(list.begin(), list.end(), [=](BubbleNode* node) {
 		if (node->getBubble()->getParent() == nullptr) {
 			addChild(node->getBubble());
@@ -64,7 +64,7 @@ void BubbleLayer::addBubbles() {
 	}
 	);
 
-	list = hexmap->getTopList();
+	list = BubbleFactory::getFactory().getTopList();
 	std::for_each(list.begin(), list.end(), [=](BubbleNode* node) {
 		if (node->getBubble()->getParent()==nullptr) {
 			addChild(node->getBubble());
@@ -94,7 +94,12 @@ void BubbleLayer::moveSelect(ConnectType type) {
 		return;
 	}
 	BubbleNode* next = select->getNeighbour(type);
-	
+	if (next != nullptr) {
+		select->unselect();
+		select = next;
+		select->select();
+	}
+	/*
 	if (next != nullptr&&next->isBubble()) {
 	
 
@@ -111,18 +116,21 @@ void BubbleLayer::moveSelect(ConnectType type) {
 			select->getBubble()->setOpacity(10);
 		}
 	}
-
+	*/
 }
 
 
 void BubbleLayer::setOriginSelect() {
+	/*
 	if (select != nullptr) {
 		select->getBulk()->unselect();
 	}
-	select = (*hexmap->getBubblesList().begin());
-	//select= (*hexmap->getAttachList().begin());
-	select->unselect();
-	select->getBulk()->select();
+	*/
+	auto list = BubbleFactory::getFactory().getBubblesList();
+	//select = (*BubbleFactory::getFactory().getBubblesList().begin());
+	select= (*(list.begin()));
+	select->select();
+//	select->getBulk()->select();
 	
 }
 
@@ -131,41 +139,44 @@ void BubbleLayer::processShootBubble(BubbleNode* bubble) {
 	shootList.push_back(bubble);
 }
 
-void BubbleLayer::testConnection(BubbleNode* node) {
+void BubbleLayer::testAttach(BubbleNode* node) {
 	float boundry_L = SQRT_2*bubbleSize;
 	float boundry_M= bubbleSize *2/3 ;
-	auto list = hexmap->getAttachList();
+	auto list = BubbleFactory::getFactory().getAttachList();
 	auto itr = list.begin();
 	while (itr!= list.end()) {
-		
-		Point attachPos = (*itr)->getPosition();
-		Point nodePos = node->getPosition();
-		if (abs(attachPos.x - nodePos.x) + abs(attachPos.y - nodePos.y) >boundry_L) {
-			++itr;
-			continue;
-		}
-		float distance = attachPos.distance(nodePos);
-		Vec2 connectDir = attachPos - nodePos;
-		connectDir.normalize();
-		Vec2 moveDir = node->velocity;
-		moveDir.normalize();
-		float angle = connectDir.dot(moveDir);
-		if (distance< boundry_M) {
-			if (angle > 0.3f) {
-				node->nextState();
-				attachBubble(node, (*itr));
-				CCLOG("AttachWay: small distance");
-				break;
+
+		if ((*itr)->getState() != BubbleState::DEAD) {
+			Point attachPos = (*itr)->getPosition();
+			Point nodePos = node->getPosition();
+			if (abs(attachPos.x - nodePos.x) + abs(attachPos.y - nodePos.y) > boundry_L) {
+				++itr;
+				continue;
 			}
-		}else {
-			 if (angle > 0.88f) {
-				 node->nextState();
-				 attachBubble(node, (*itr));
-				 CCLOG("AttachWay: Large distance");
-				 break;
+			float distance = attachPos.distance(nodePos);
+			Vec2 connectDir = attachPos - nodePos;
+			connectDir.normalize();
+			Vec2 moveDir = node->velocity;
+			moveDir.normalize();
+			float angle = connectDir.dot(moveDir);
+			if (distance < boundry_M) {
+				if (angle > 0.3f) {
+					node->nextState();
+					attachBubble(node, (*itr));
+					CCLOG("AttachWay: small distance");
+					break;
+				}
 			}
-			node->velocity.normalize();
-			node->velocity *= SHOOT_SPEED;
+			else {
+				if (angle > 0.88f) {
+					node->nextState();
+					attachBubble(node, (*itr));
+					CCLOG("AttachWay: Large distance");
+					break;
+				}
+				node->velocity.normalize();
+				node->velocity *= SHOOT_SPEED;
+			}
 		}
 		itr++;
 	}
@@ -173,7 +184,78 @@ void BubbleLayer::testConnection(BubbleNode* node) {
 }
 void BubbleLayer::attachBubble(BubbleNode* node, BubbleNode* attachNode) {
 	node->attachTo(attachNode->getPosition());
-	attachNode->select();
+	bool ifShootBulk = false;
+	
+	//shoot bulk
+	BubbleNode* neighbour;
+	for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
+		ConnectType type = node->connectType[i];
+		neighbour = attachNode->connect[(int)type];
+		if (neighbour != nullptr&&neighbour->getType() == node->getType()) {
+			
+			if (neighbour->getBulk()->getNodeNum() > 1) {
+				auto bulk = neighbour->getBulk();
+				
+				auto outerConnect = bulk->getFirstConnectOuterNode();
+				if (outerConnect != nullptr) {
+					for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
+						ConnectType type = outerConnect->connectType[i];
+						int type_i = (int)type;
+						auto temp = outerConnect->connect[type_i];
+						if (temp != nullptr) {
+
+
+							if (temp->getType() == BubbleType::Boundry_Top) {
+								addChild(hexmap->generateAttachReplace(outerConnect)->getBubble());
+								break;
+							}
+							else {
+								if (temp->isBubble() && temp->getBulk() != outerConnect->getBulk()) {
+
+									addChild(hexmap->generateAttachReplace(outerConnect)->getBubble());
+									break;
+								}
+							}
+						}
+					}
+				}
+				while (bulk->ifHasNextConnectOuterNode()) {
+					outerConnect = bulk->getNextConnectOuterNode();
+					for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
+						ConnectType type = outerConnect->connectType[i];
+						int type_i = (int)type;
+						auto temp = outerConnect->connect[type_i];
+						if (temp != nullptr) {
+							if (temp->getType() == BubbleType::Boundry_Top) {
+								addChild(hexmap->generateAttachReplace(outerConnect)->getBubble());
+								break;
+							}
+							else {
+								if (temp->isBubble() && temp->getBulk() != outerConnect->getBulk()) {
+
+									addChild(hexmap->generateAttachReplace(outerConnect)->getBubble());
+									break;
+								}
+							}
+						}
+					}
+				}
+				bulk->destoryBubbles();
+				ifShootBulk = true;
+			}
+		}
+	}
+
+	if (ifShootBulk) {
+		node->destorySelf();		
+	}
+	else {
+		node->registerBulk();
+		//node->
+		//attach
+	}
+
+	
 }
 
 void BubbleLayer::cleanShootList() {
