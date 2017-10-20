@@ -28,6 +28,7 @@ public:
 	void testAttach(BubbleNode* node);
 	void attachBubble(BubbleNode* node, BubbleNode* attachNode);
 	void cleanShootList();
+	void checkThreeMatch(BubbleNode* node, BubbleNode* attachNode);
 private:
 	HexMap* hexmap;
 	float width;

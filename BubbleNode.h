@@ -9,7 +9,7 @@ class BubbleFactory;
 const static int SHOOT_SPEED = 10;
 const unsigned int RESOURCE_BUBBLE_SIZE=200;
 const unsigned int NEIGHBOUR_NUMBER = 6;
-const static bool BUBBLE_DEBUG = false;
+const static bool BUBBLE_DEBUG = true;
 enum class ConnectType{
 	LeftTop=0, RightTop, Left, Right, LeftBottom, RightBottom
 };
@@ -39,11 +39,11 @@ public:
 	BubbleNode(BubbleType, cocos2d::Point pos, cocos2d::Size size);
 	cocos2d::Sprite* getBubble() { return bubble; }
 	void connectBubble(ConnectType type, BubbleNode* bubble);
-	void disConnectBubble(ConnectType type, BubbleNode* bubble,bool ifCheck);
-
+	void disConnectBubble(ConnectType type, BubbleNode* bubble);
+	void removeAllBulkConnection();
 	void registerBulk();
 	void connectBulk(BubbleNode* node);
-	void disConnectBulk( BubbleNode* node,bool ifCheak);
+	
 	Bulk* getBulk();
 	void setBulk(Bulk* bulk);
     void setPositions(cocos2d::Vec2 position);
@@ -53,7 +53,7 @@ public:
 	void unselect();
 	BubbleNode* getNeighbour(ConnectType type);
 	void extendAllConnectionFrom(BubbleNode* fromNode);
-	void extendStrongConnectionFrom(BubbleNode* fromNode);
+	void extendOuterConnectionFrom(BubbleNode* fromNode);
 	void removeAllConnection();
 
 	bool isBubble();
@@ -62,9 +62,10 @@ public:
 	void setBubbleState(BubbleState state);
 	void nextState();
 
-	void attachTo(cocos2d::Point position);
+	void attachTo(cocos2d::Point position, std::function<void(BubbleNode* node, BubbleNode* attach)> detect,BubbleNode* param1,BubbleNode* param2);
 
 	void destorySelf();
+
 
 	void reset();
 private:

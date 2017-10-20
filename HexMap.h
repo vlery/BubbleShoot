@@ -21,6 +21,7 @@ public:
 	HexMap(float size, float width,int layer);
 	void generateRow(std::function<void()> moveDown);
 	BubbleNode* generateAttachReplace(BubbleNode* replace);
+	void generateAttachNodeAround(BubbleNode* node);
 private:  
 	float size;
 	float width;
@@ -30,7 +31,7 @@ private:
 	void generateBubbleLayer();
 
 	BubbleNode* createBubbleToList(BubbleType type,cocos2d::Point pos);
-	
+	cocos2d::Vec2 getOffsetByType(ConnectType type);
 
 	
 };

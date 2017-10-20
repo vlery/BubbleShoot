@@ -6,7 +6,7 @@
 #include "BubbleLayer.h"
 #include "ShootLayer.h"
 
-static int INIT_LAYER=3;
+static int INIT_LAYER=1;
 static int INIT_BUBBLE_SIZE = 60;
 static int INIT_MAP_WIDTH = 360;
 static float BORDER_COLOR[4] = { 0.4,0.4,0.4,1 };

@@ -102,6 +102,9 @@ void GameScene::initKeyboardListener() {
 		case EventKeyboard::KeyCode::KEY_UP_ARROW:
 			shootBubble();
 			break;
+		case EventKeyboard::KeyCode::KEY_DOWN_ARROW:
+			shootLayer->abandon();
+			break;
 
 			/*
 			case EventKeyboard::KeyCode::KEY_LEFT_ARROW:

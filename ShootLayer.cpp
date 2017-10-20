@@ -1,4 +1,5 @@
 #include "ShootLayer.h"
+
 USING_NS_CC;
 bool ShootLayer::init() {
 	if (!Layer::init()) {
@@ -42,7 +43,8 @@ void ShootLayer::changeDirection(bool ifClockwise) {
 
 
 void ShootLayer::loadBubble() {
-	currentBubble = new BubbleNode(static_cast<BubbleType>(rand() % 5),Point(this->getContentSize().width/2,bubbleSize/2),Size(bubbleSize,bubbleSize));
+	currentBubble = BubbleFactory::getFactory().generateBubble(static_cast<BubbleType>(rand() % 5), Point(this->getContentSize().width / 2, bubbleSize / 2), Size(bubbleSize, bubbleSize));
+//		new BubbleNode(static_cast<BubbleType>(rand() % 5),Point(this->getContentSize().width/2,bubbleSize/2),Size(bubbleSize,bubbleSize));
 	currentBubble->setBubbleState(BubbleState::READY);
 	this->addChild(currentBubble->getBubble());
 }
@@ -58,4 +60,15 @@ BubbleNode* ShootLayer::shoot() {
 	shootBubble->velocity.y = sin(rotate)*SHOOT_SPEED;
 	shootBubble->nextState();
 	return shootBubble;
+}
+
+
+void ShootLayer::abandon() {
+	currentBubble->getBubble()->removeFromParent();
+	this->removeChild(currentBubble->getBubble(), true);
+	BubbleFactory::getFactory().recycle(currentBubble);
+	
+	 loadBubble();
+	
+	
 }

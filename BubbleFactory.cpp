@@ -6,11 +6,9 @@ void BubbleFactory::addInList(BubbleNode* node) {
 		topBoundries.push_back(node); return;
 	case BubbleType::Boundry_Attach:
 		potentialAttachPositions.push_back(node);
-		node->registerBulk();
 		return;
 	default:
 		bubbles.push_back(node);
-		node->registerBulk();
 		return;
 	}
 }

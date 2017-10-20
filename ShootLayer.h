@@ -4,6 +4,7 @@
 
 #include "cocos2d.h"
 #include "BubbleNode.h"
+#include "BubbleFactory.h"
 
 class ShootLayer: public cocos2d::Layer {
 
@@ -15,6 +16,8 @@ public:
 	void loadBubble();
 	void resetControlPanel();
 	BubbleNode* shoot();
+
+	void abandon();
 private:
 		cocos2d::Layer* controlPanel;
 		BubbleNode* currentBubble=nullptr;
