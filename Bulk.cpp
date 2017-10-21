@@ -2,7 +2,6 @@
 #include "BubbleNode.h"
 
 void combineUnboundBulkAround(Bulk* bulk) {
-	
 	std::list<Bulk*> baseConnect;
 	auto connectList = bulk->getConnectBulkList();
 	auto itr = connectList.begin();
@@ -91,19 +90,13 @@ Bulk::Bulk(BubbleType type) {
 void Bulk::attach(BubbleNode* bubble) {
 	bubbles.push_back(bubble);
 	nodeNum++;
-	connectTopCount = 0;
 }
 void Bulk::detach(BubbleNode* bubble) {
-	for (auto it = bubbles.begin(); it != bubbles.end(); ) {
-		if ((*it) == bubble) {
-			it = bubbles.erase(it);
-			break;
-		}
-		else {
-			++it;
-		}
+	auto find_itr = std::find(bubbles.begin(), bubbles.end(), bubble);
+	if (find_itr != bubbles.end()) {
+		bubbles.erase(find_itr);
+		nodeNum--;
 	}
-	nodeNum--;
 }
 
 
@@ -120,30 +113,19 @@ bool Bulk::ifHasBubble(BubbleNode* bubble) {
 
 
 void  Bulk::select() {
-	auto start = bubbles.begin();
-	auto end = bubbles.end();
-	while (start != end) {
-		(*start)->select();
-		++start;
-	}
-
-	
+	std::for_each(bubbles.begin(), bubbles.end(), [](BubbleNode* node) {
+		node->select();
+	});	
 }
 void Bulk::unselect() {
-	auto start = bubbles.begin();
-	auto end = bubbles.end();
-	while (start != end) {
-		(*start)->unselect();
-		++start;
-	}
+	std::for_each(bubbles.begin(), bubbles.end(), [](BubbleNode* node) {
+		node->unselect();
+	});
 }
 void Bulk::detachAll() {
-	auto start = bubbles.begin();
-	auto end = bubbles.end();
-	while (start != end) {
-		(*start)->setBulk(nullptr);
-		++start;
-	}
+	std::for_each(bubbles.begin(), bubbles.end(), [](BubbleNode* node) {
+		node->setBulk(nullptr);
+	});
 }
 void Bulk::absorb(Bulk* bulk_delete) {
 	nodeNum += bulk_delete->nodeNum;
@@ -153,34 +135,40 @@ void Bulk::absorb(Bulk* bulk_delete) {
 	});
 	bubbles.splice(bubbles.begin(),bulk_delete->bubbles);
 	
-	auto list1 = bulk_delete->getConnectBulkList();
-	auto bulk_itr = list1.begin();
-	while(bulk_itr!=list1.end()){
-		if (std::find(list.begin(), list.end(), *bulk_itr) == list.end()) {
-			list.emplace_back(*bulk_itr);
+	auto list1 = bulk_delete->connectBulkList;
+	
+	for_each(list1.begin(), list1.end(), [this,bulk_delete](Bulk* b) {
+		if (b != this) {
+			if (std::find(connectBulkList.begin(), connectBulkList.end(), b) == connectBulkList.end()) {
+				connectBulkList.emplace_back(b);
+			}
+			b->replaceConnectBulk(bulk_delete, this);
 		}
-		(*bulk_itr)->replaceConnectBulk(bulk_delete, this);
-		++bulk_itr;
-	}
+		else {
+			this->removeConnectBulk(bulk_delete);
+
+		}
+	}			);
 	list1.clear();
 	
-	//delete bulk_delete;
+	delete bulk_delete;
 }
 
 void Bulk::addConnectBulk(Bulk* bulk) {
-	auto find_itr = std::find(list.begin(), list.end(), bulk);
-	if (find_itr == list.end()) {
-		list.emplace_back(bulk);
+	if (std::find(connectBulkList.begin(), connectBulkList.end(), bulk) == connectBulkList.end()) {
+		connectBulkList.emplace_back(bulk);
 	}
 }
 void Bulk::removeConnectBulk(Bulk* bulk) {
-	auto find_itr = std::find(list.begin(), list.end(), bulk);
-	if (find_itr != list.end()) {
-		list.erase(find_itr);
+	auto find_itr = std::find(connectBulkList.begin(), connectBulkList.end(), bulk);
+	if (find_itr != connectBulkList.end()) {
+		connectBulkList.erase(find_itr);
 	}
+	/*
 	if (list.size() == 0) {
-		destory();
+		//destory();
 	}
+	*/
 }
 
 
@@ -189,11 +177,9 @@ BubbleNode* Bulk::getFirstConnectOuterNode() {
 	while (connectOutItr != bubbles.end()) {
 		BubbleNode* node = (*connectOutItr);
 		for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
-			auto neighbour = node->connect[(int)node->connectType[i]];
-			if (neighbour != nullptr) {
-				if (neighbour->isBubble() || neighbour->isTopBoundry()) {
-					return node;
-				}
+			auto neighbour = node->getNeighbour(node->connectType[i]);
+			if (neighbour != nullptr&& (neighbour->isBubble() || neighbour->isTopBoundry())) {
+				return node;
 			}
 		}
 		++connectOutItr;
@@ -203,14 +189,11 @@ BubbleNode* Bulk::getFirstConnectOuterNode() {
 bool Bulk::ifHasNextConnectOuterNode() {
 	++connectOutItr;
 	while (connectOutItr != bubbles.end()) {
-		
 		BubbleNode* node = (*connectOutItr);
 		for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
-			auto neighbour = node->connect[(int)node->connectType[i]];
-			if (neighbour != nullptr) {
-				if (neighbour->isBubble() || neighbour->isTopBoundry()) {
+			auto neighbour = node->getNeighbour(node->connectType[i]); 
+			if (neighbour != nullptr &&(neighbour->isBubble() || neighbour->isTopBoundry())) {
 					return true;
-				}
 			}
 		}
 		++connectOutItr;
@@ -222,16 +205,15 @@ BubbleNode* Bulk::getNextConnectOuterNode() {
 }
 
 void Bulk::removeAllConnection() {
-
-	std::for_each(list.begin(), list.end(), [this](Bulk* bulk) {
+	std::for_each(connectBulkList.begin(), connectBulkList.end(), [this](Bulk* bulk) {
 		bulk->removeConnectBulk(this);
 	});
-	list.clear();
+	connectBulkList.clear();
 	
 }
 
 std::list<Bulk*> Bulk::getConnectBulkList(){ 
-	return list;
+	return connectBulkList;
 }
 
 void Bulk::replaceConnectBulk(Bulk* from, Bulk* to) {

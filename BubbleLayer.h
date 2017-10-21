@@ -40,6 +40,7 @@ private:
 	void attachBubble(BubbleNode* node, BubbleNode* attachNode);
 	void cleanShootList();
 	void generateAttachReplace(BubbleNode* node);
+	int cleanTimer = 0;
 	
 };
 #endif // !BubbleLayer#pragma once

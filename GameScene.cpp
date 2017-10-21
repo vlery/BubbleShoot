@@ -10,7 +10,7 @@ bool GameScene::init() {
 
 	initLayout();
 	initKeyboardListener();
-
+	this->scheduleUpdate();
 	return true;
 
 }
@@ -64,8 +64,6 @@ void GameScene::initKeyboardListener() {
 	auto eventListener = EventListenerKeyboard::create();
 
 	eventListener->onKeyPressed = [=](EventKeyboard::KeyCode keyCode, Event* event) {
-
-		Vec2 loc = event->getCurrentTarget()->getPosition();
 		switch (keyCode) {
 		case EventKeyboard::KeyCode::KEY_SPACE:
 			bubbleLayer->addLayer();
@@ -93,11 +91,11 @@ void GameScene::initKeyboardListener() {
 			break;
 
 		case EventKeyboard::KeyCode::KEY_LEFT_ARROW:
-			shootLayer->changeDirection(false);
+			ifRotateLeft = true;
 			break;
 
 		case EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
-			shootLayer->changeDirection(true);
+			ifRotateRight = true;
 			break;
 		case EventKeyboard::KeyCode::KEY_UP_ARROW:
 			shootBubble();
@@ -105,35 +103,33 @@ void GameScene::initKeyboardListener() {
 		case EventKeyboard::KeyCode::KEY_DOWN_ARROW:
 			shootLayer->abandon();
 			break;
-
-			/*
-			case EventKeyboard::KeyCode::KEY_LEFT_ARROW:
-			case EventKeyboard::KeyCode::KEY_A:
-			event->getCurrentTarget()->setPosition(--loc.x, loc.y);
-			break;
-			case EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
-			case EventKeyboard::KeyCode::KEY_D:
-			event->getCurrentTarget()->setPosition(++loc.x, loc.y);
-			break;
-			case EventKeyboard::KeyCode::KEY_UP_ARROW:
-			case EventKeyboard::KeyCode::KEY_W:
-			event->getCurrentTarget()->setPosition(loc.x, ++loc.y);
-			break;
-			case EventKeyboard::KeyCode::KEY_DOWN_ARROW:
-			case EventKeyboard::KeyCode::KEY_S:
-			event->getCurrentTarget()->setPosition(loc.x, --loc.y);
-			break;
-			*/
 		}
 	};
 
+	eventListener->onKeyReleased = [=](EventKeyboard::KeyCode keyCode, Event* event) {
+		
+		switch (keyCode) {
+		case EventKeyboard::KeyCode::KEY_LEFT_ARROW:
+			ifRotateLeft = false;
+			break;
+
+		case EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
+			ifRotateRight = false;
+			break;
+		
+		}
+	};
 	this->_eventDispatcher->addEventListenerWithSceneGraphPriority(eventListener, this);
 }
 
 void GameScene::shootBubble() {
+	if (shootTimer > SHOOT_INTERVAL) {
+		shootTimer = 0;
+	}else{
+		return;
+	}
 	BubbleNode* bubble = shootLayer->shoot();
 	shootLayer->loadBubble();
-//	shootLayer->resetControlPanel();
 	bubble->setPositions(correctPosCrt2BB(bubble->getPosition()));
 	bubbleLayer->processShootBubble(bubble);
 }
@@ -142,4 +138,16 @@ Point GameScene::correctPosCrt2BB(Point position) {
 	Point posCrt2World = position + shootLayer->getPosition();
 	Point posWorld2BB = posCrt2World - bubbleLayer->getPosition();
 	return posWorld2BB;
+}
+
+void GameScene::update(float t) {
+	if (ifRotateRight) {
+		shootLayer->changeDirection(true);
+	}
+
+	if (ifRotateLeft) {
+		shootLayer->changeDirection(false);
+	}
+
+	++shootTimer;
 }

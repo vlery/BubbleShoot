@@ -16,20 +16,19 @@ void BubbleFactory::addInList(BubbleNode* node) {
 void BubbleFactory::recycle() {
 	auto itr = bubbles.begin();
 
-	if (itr != bubbles.end()){
-		if ((*itr)->getState() == BubbleState::DEAD) {
+	while(itr != bubbles.end()){
+		if ((*itr)->isDead()) {
 			(*itr)->reset();
 			pool.push_back(*itr);
 			itr=bubbles.erase(itr);
-
 		}else{
 			++itr;
 		}
 	}
 
 	itr = potentialAttachPositions.begin();
-	if (itr != potentialAttachPositions.end()) {
-		if ((*itr)->getState() == BubbleState::DEAD) {
+	while(itr != potentialAttachPositions.end()) {
+		if ((*itr)->isDead()) {
 			(*itr)->reset();
 			pool.push_back(*itr);
 			itr = potentialAttachPositions.erase(itr);
@@ -43,6 +42,7 @@ void BubbleFactory::recycle() {
 }
 
 void BubbleFactory::recycle(BubbleNode* node) {
+	node->reset();
 	if (node->isBubble()) {
 		auto itr = bubbles.begin();
 		while (itr != bubbles.end()) {
@@ -97,7 +97,9 @@ BubbleNode* BubbleFactory::generateBubble(BubbleType type, cocos2d::Point positi
 				node->setPositions(position);
 				//node->getBubble()->setContentSize(size);
 				return node;
+				
 			}
+			++itr;
 		}
 		return new BubbleNode(type, position, size);
 	}

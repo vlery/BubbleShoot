@@ -7,7 +7,7 @@
 #include "Config.h"
 
 
-
+bool isSamePos(cocos2d::Point p1, cocos2d::Point p2);
 class HexMap {
 
 

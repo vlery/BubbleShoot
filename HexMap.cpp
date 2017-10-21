@@ -1,6 +1,10 @@
 #include "HexMap.h"
 #include "Bulk.h"
 USING_NS_CC;
+
+bool isSamePos(Point p1, Point p2) {
+	return ((int)p1.x == (int)p2.x && (int)p1.y == (int)p2.y);
+}
 HexMap::HexMap(float size, float width, int layer) {
 	this->size = size;
 	this->width = width;
@@ -17,8 +21,7 @@ HexMap::HexMap(float size, float width, int layer) {
 void HexMap::initBoundry() {
 	
 	int rowNum = ifOffset ? (width - size / 2 * SQRT_3) / size : width / size;
-	Vec2 offset_r_b = OFFSET_BOTTOM_RIGHT*size / 2;
-	Vec2 offset_l_b = OFFSET_BOTTOM_LEFT*size / 2;
+
 	float offset_x = ifOffset ? size  : size/2;
 	ConnectType connectDown = ConnectType::RightBottom;
 	/*
@@ -31,13 +34,17 @@ void HexMap::initBoundry() {
 	BubbleNode* node00 = createBubbleToList(BubbleType::Boundry_Top, Point(offset_x, size*(SQRT_3 - 1) / 2));
 	BubbleNode* node01;
 	if (ifOffset) {
-		node01= createBubbleToList(BubbleType::Boundry_Attach, node00->getPosition() + offset_l_b);
+		node01= createBubbleToList(BubbleType::Boundry_Attach, 
+			node00->getPosition() + getOffsetByType(ConnectType::LeftBottom));
 		node00->connectBubble(reflectY(connectDown), node01);
 	}		
-	node01 = createBubbleToList(BubbleType::Boundry_Attach, node00->getPosition() + offset_r_b);
+;
+	node01 = createBubbleToList(BubbleType::Boundry_Attach, 
+		node00->getPosition() + getOffsetByType(ConnectType::RightBottom));
 	node00->connectBubble(connectDown, node01);
 	if (ifOffset) {
-		node00->connect[(int)ConnectType::RightBottom]->connectBubble(ConnectType::Left, node00->connect[(int)ConnectType::LeftBottom]);
+		node00->connect[(int)ConnectType::RightBottom]->
+			connectBubble(ConnectType::Left, node00->connect[(int)ConnectType::LeftBottom]);
 	}
 
 
@@ -68,7 +75,7 @@ void HexMap::initBoundry() {
 	node10->connectBubble(reflectY(connectDown), node01);
 	
 
-	if (node01->getPosition().x + size * 3 / 2 <= width) {
+	if (node10->getPosition().x + size  <= width) {
 		BubbleNode* node11 = createBubbleToList(BubbleType::Boundry_Attach, node01->getPosition() + Vec2(size, 0));
 		node10->connectBubble(connectDown, node11);
 		node11->connectBubble(ConnectType::Left, node01);
@@ -82,8 +89,7 @@ void HexMap::generateRow(std::function<void()> moveDown) {
 
 void HexMap::generateBubbleLayer() {
 	//up-right,up-left
-	Vec2 offset_u_r = OFFSET_UP_RIGHT*size / 2;
-	Vec2 offset_u_l = OFFSET_UP_LEFT*size / 2;
+
 	/*
 	*Better to sort;  Push_back form a sorted list
 	*/
@@ -97,29 +103,25 @@ void HexMap::generateBubbleLayer() {
 	*/
 	auto list = BubbleFactory::getFactory().getTopList();
 	auto itr = list.begin();
-	
 	float height_crt_save = (*itr)->getPosition().y;
-	auto ul_pos = (*itr)->getPosition() + offset_u_l;
+	auto ul_pos = (*itr)->getPosition() + getOffsetByType(ConnectType::LeftTop);
 	BubbleNode* b00=nullptr;
-
 	if (ul_pos.x >= size / 2) {
-
 		b00 = createBubbleToList(BubbleType::Boundry_Top, ul_pos);
-			
 	}
 	BubbleNode*  b01=nullptr;
-	BubbleNode* b10;
-	BubbleNode* b11;
+	BubbleNode* b10=nullptr;
+	BubbleNode* b11=nullptr;
 	while (abs((*itr)->getPosition().y - height_crt_save)<0.1) {
 		b10 = *(itr);
 		BubbleFactory::getFactory().topListPopFront();
-		b11 = createBubbleToList(static_cast<BubbleType>((rand()%13) % 5), b10->getPosition());
+		b11 = createBubbleToList(static_cast<BubbleType>(rand()% 5), b10->getPosition());
 		b11->extendAllConnectionFrom(b10);
 		if (b00 != nullptr) {
 			b11->connectBubble(ConnectType::LeftTop, b00);
 		}
 	
-		auto ur_pos = b10->getPosition() + offset_u_r;
+		auto ur_pos = b10->getPosition() + getOffsetByType(ConnectType::RightTop);
 		if (ur_pos.x <= width - size / 2) {
 			b10->setPositions(ur_pos);
 			BubbleFactory::getFactory().addInList(b10);
@@ -148,7 +150,7 @@ BubbleNode* HexMap::createBubbleToList(BubbleType type, Point pos) {
 	auto node=BubbleFactory::getFactory().generateBubble(type, pos, Size(size, size));
 	node->setBubbleState(BubbleState::ATTACH);
 	BubbleFactory::getFactory().addInList(node);
-	if (type != BubbleType::Boundry_Top) {
+	if (!node->isTopBoundry()) {
 		node->registerBulk();
 	}
 	return node;
@@ -157,10 +159,7 @@ BubbleNode* HexMap::createBubbleToList(BubbleType type, Point pos) {
 
 BubbleNode* HexMap::generateAttachReplace(BubbleNode* replace) {
 	BubbleNode* node = createBubbleToList(BubbleType::Boundry_Attach, replace->getPosition());
-	
 	node->extendOuterConnectionFrom(replace);
-	
-	
 	return node;
 }
 
@@ -168,56 +167,48 @@ void 	 HexMap::generateAttachNodeAround(BubbleNode* node) {
 	for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
 		ConnectType type = node->connectType[i];
 		int type_i = (int)type;
-		if (node->connect[type_i] == nullptr) {
+		if (node->getNeighbour(node->connectType[i])== nullptr) {
 			Point pos = node->getPosition() + getOffsetByType(type);
 			if (pos.x<size / 2 || pos.x>width - size / 2) {
 				continue;
 			}
-			
-
 			bool ifConnect = false;
-			
-			auto list = BubbleFactory::getFactory().getAttachList();
-			auto itr = list.begin();
-			while (itr != list.end()) {
-				if ((*itr)->getState() == BubbleState::DEAD) {
-					++itr;
+			auto attach_list = BubbleFactory::getFactory().getAttachList();
+			auto attach_itr = attach_list.begin();
+			while (attach_itr != attach_list.end()) {
+				if ((*attach_itr)->isDead()) {
+					++attach_itr;
 					continue;
 				}
 				else {
-					Point bubblePos = (*itr)->getPosition();
-					if ((int)bubblePos.x == (int)pos.x && (int)bubblePos.y == (int)pos.y) {
-						node->connectBubble(type, (*itr));
+					if(isSamePos((*attach_itr)->getPosition(),pos)){
+						node->connectBubble(type, (*attach_itr));
 						ifConnect = true;
 						break;
 					}
 				}
-				++itr;
+				++attach_itr;
 			}
 			if (!ifConnect) {
-				list = BubbleFactory::getFactory().getBubblesList();
-				itr = list.begin();
-				while (itr != list.end()) {
-					if ((*itr)->getState() == BubbleState::DEAD) {
-						++itr;
+				auto bubble_list = BubbleFactory::getFactory().getBubblesList();
+				auto bubble_itr = bubble_list.begin();
+				while (bubble_itr != bubble_list.end()) {
+					if ((*bubble_itr)->isDead()) {
+						++bubble_itr;
 						continue;
 					}
-					Point bubblePos = (*itr)->getPosition();
-					if ((int)bubblePos.x == (int)pos.x && (int)bubblePos.y == (int)pos.y) {
-						node->connectBubble(type, (*itr));
+					if (isSamePos((*bubble_itr)->getPosition(),pos)) {
+						node->connectBubble(type, (*bubble_itr));
 						ifConnect = true;
 						break;
 					}
-					++itr;
+					++bubble_itr;
 				}
 			}
 		
 			if (!ifConnect) {
 				BubbleNode* attach=createBubbleToList(BubbleType::Boundry_Attach, pos);
 				node->connectBubble(type, attach);
-
-
-
 			}
 		
 		}

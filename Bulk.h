@@ -50,7 +50,7 @@ private:
 	BubbleType type;
 	int nodeNum;
 	std::list<BubbleNode*>::iterator connectOutItr;
-	std::list<Bulk*> list;
+	std::list<Bulk*> connectBulkList;
 };
 
 

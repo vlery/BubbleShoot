@@ -28,6 +28,10 @@ void BubbleLayer::update(float delta) {
 		});
 		this->cleanShootList();
 	}
+	if (++cleanTimer > CLEAN_INTERVAL) {
+		BubbleFactory::getFactory().recycle();
+		cleanTimer = 0;
+	}
 }
 
 
@@ -215,59 +219,32 @@ void BubbleLayer::attachBubble(BubbleNode* node, BubbleNode* attachNode) {
 }
 
 void BubbleLayer::checkThreeMatch(BubbleNode* node, BubbleNode* attachNode) {
-	bool ifShootBulk = false;
-
+	node->registerBulk();
+	BubbleFactory::getFactory().addInList(node);
+	node->extendAllConnectionFrom(attachNode);
+	attachNode->destorySelf();
+	attachNode->getBulk()->removeAllConnection();
+	
+	bool ifShootBulk = (node->getBulk()->getNodeNum()>2);
 	BubbleNode* neighbour;
-	int sameTypeCount = 0;
-	for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
-		neighbour = attachNode->connect[(int)node->connectType[i]];
-		if (neighbour != nullptr&&neighbour->isSameType(node)) {
-			if (neighbour->getBulk()->getNodeNum() > 1) {
-				ifShootBulk = true;
-				break;
-			}
-			else {
-				if (++sameTypeCount > 1) {
-					ifShootBulk = true;
-					break;
-				}
-			}
-		}
-	}
 	
-	
-	
-	//shoot bulk
 
 	if (ifShootBulk) {
-		for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
-			neighbour = attachNode->connect[(int)node->connectType[i]];
-			if (neighbour != nullptr&&neighbour->isSameType(node)) {
-					combineUnboundBulkAround(neighbour->getBulk());
-					auto bulk = neighbour->getBulk();
-					auto outerConnect = bulk->getFirstConnectOuterNode();
-					if (outerConnect != nullptr) {
-						generateAttachReplace(outerConnect);
-						
-					}
-					while (bulk->ifHasNextConnectOuterNode()) {
-						outerConnect = bulk->getNextConnectOuterNode();
-						generateAttachReplace(outerConnect);
-					}
-					bulk->destory();
+		combineUnboundBulkAround(node->getBulk());
+		auto bulk = node->getBulk();
+		
+		auto outerConnect = bulk->getFirstConnectOuterNode();
+		if (outerConnect != nullptr) {
+			generateAttachReplace(outerConnect);
 
-				
-			}
 		}
-		node->destorySelf();
-
+		while (bulk->ifHasNextConnectOuterNode()) {
+			outerConnect = bulk->getNextConnectOuterNode();
+			generateAttachReplace(outerConnect);
+		}
+		bulk->destory();
 	}
 	else {
-		node->registerBulk();
-		BubbleFactory::getFactory().addInList(node);
-		node->extendAllConnectionFrom(attachNode);
-		attachNode->destorySelf();
-		attachNode->removeAllBulkConnection();
 		hexmap->generateAttachNodeAround(node);
 		addBubbles();
 	}

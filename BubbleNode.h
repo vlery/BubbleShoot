@@ -32,7 +32,7 @@ public:
 	cocos2d::Sprite* getBubble() { return bubble; }
 	void connectBubble(ConnectType type, BubbleNode* bubble);
 	void disConnectBubble(ConnectType type, BubbleNode* bubble);
-	void removeAllBulkConnection();
+
 	void registerBulk();
 	void connectBulk(BubbleNode* node);
 	
@@ -73,9 +73,7 @@ private:
 	BubbleState bubbleState= BubbleState::ATTACH;
 	bool init();
 	cocos2d::Size size;
-	int tag;
 	Bulk* bulk=nullptr;
-	void bubbleAttachUpdate(float time);
 	BubbleNode* getNeighbourByConnectType(ConnectType type);
 	BubbleType getType() { return type; }
     

@@ -73,9 +73,9 @@ BubbleNode::BubbleNode(BubbleType type, Point position,Size size) {
 bool BubbleNode::init() {
 	int i =(int) type;
 	if (i < 5) {
-		bubble = Sprite::create("asset/bubble.png", CCRectMake(i*RESOURCE_BUBBLE_SIZE, 0, RESOURCE_BUBBLE_SIZE, RESOURCE_BUBBLE_SIZE));
+		bubble = Sprite::create(BUBBLE_IMG_PATH, CCRectMake(i*RESOURCE_BUBBLE_SIZE, 0, RESOURCE_BUBBLE_SIZE, RESOURCE_BUBBLE_SIZE));
 	}else {
-		bubble = Sprite::create("asset/default.png", CCRectMake(0, 0, 200,200));
+		bubble = Sprite::create(BUBBLE_DEFAULT_IMG_PATH, CCRectMake(0, 0, 200,200));
 		bubble->setVisible(BUBBLE_DEBUG);
 	}
 	bubble->setContentSize(size);
@@ -155,7 +155,9 @@ void BubbleNode::select() {
 	bubble->setOpacity(30);
 	if (getBulk() != nullptr) {
 		//CCLOG("currentNode, connection:%d", getBulk()->getConnection());
-		CCLOG("currentNode, bulk nodeNum:%d", getBulk()->getNodeNum());
+		if (BUBBLE_DEBUG) {
+			CCLOG("currentNode, bulk nodeNum:%d", getBulk()->getNodeNum());
+		}
 	}
 	
 }
@@ -251,13 +253,14 @@ void BubbleNode::destorySelf() {
 		}
 	}
 
-	auto callback = CallFunc::create([this]() {
-		this->getBubble()->removeFromParent();
+	auto callback = CallFunc::create([=]() {
+		bubble->removeFromParent();
+		
 		
 	});
 	if (isBubble()) {
 		this->nextState();
-		bubble->runAction(Sequence::create(MoveBy::create(1, Vec2(0, -1000)), callback, nullptr));
+		bubble->runAction(Sequence::create(MoveBy::create(1, Vec2(0, -500)), callback, nullptr));
 	}
 	else {
 		this->getBubble()->removeFromParent();
@@ -267,7 +270,13 @@ void BubbleNode::destorySelf() {
 }
 
 void BubbleNode::reset() {
-
+	for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
+		connect[i] = nullptr;
+	}
+	bulk = nullptr;	
+	if (bubble->getParent() != nullptr) {
+		bubble->removeFromParent();
+	}
 }
 
 
@@ -276,9 +285,7 @@ BubbleNode* BubbleNode::getNeighbourByConnectType(ConnectType type) {
 }
 
 
-void BubbleNode::removeAllBulkConnection() {
-	bulk->removeAllConnection();
-}
+
 
 bool BubbleNode::isDead() {
 	return bubbleState == BubbleState::DEAD;

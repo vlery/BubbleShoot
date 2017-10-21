@@ -8,7 +8,6 @@ bool ShootLayer::init() {
 	return true;
 }
 
-
 void ShootLayer::initLayout(float bubbleSize) {
 	this->bubbleSize = bubbleSize;
 	controlPanel = Layer::create();
@@ -16,35 +15,28 @@ void ShootLayer::initLayout(float bubbleSize) {
 	controlPanel->ignoreAnchorPointForPosition(false);
 	controlPanel->setContentSize(Size(20, 20));
 	controlPanel->setPosition(this->getContentSize().width / 2, bubbleSize/2);
-
-	
-	auto targetArrow = Sprite::create("asset/up-arrow.png");
+	auto targetArrow = Sprite::create(ARROW_IMG_PATH);
 	targetArrow->setPosition(controlPanel->getContentSize().width/2, 60);
 	targetArrow->setContentSize(Size(50, 50));
-
-
 	controlPanel->addChild(targetArrow);
 	addChild(controlPanel);
-	
-
 }
 
 void ShootLayer::changeDirection(bool ifClockwise) {
-	if (ifClockwise&&controlPanel->getRotation() > 60) {
+	if (ifClockwise&&controlPanel->getRotation() > MAX_DIRECTION_ANGLE) {
 		return;
 	}
-	if (!ifClockwise && controlPanel->getRotation() < -60) {
+	if (!ifClockwise && controlPanel->getRotation() < -MAX_DIRECTION_ANGLE) {
 		return;
 	}
 	float rotateDegree = ifClockwise ? 1 : -1;
-	rotateDegree *= 5;
-	controlPanel->runAction(RotateBy::create(0.1, rotateDegree));
+	rotateDegree *= CHANGE_DIRECTION_SPEED;
+	controlPanel->setRotation(controlPanel->getRotation()+ rotateDegree);
+	//controlPanel->runAction(RotateBy::create(0.1, rotateDegree));
 }
-
 
 void ShootLayer::loadBubble() {
 	currentBubble = BubbleFactory::getFactory().generateBubble(static_cast<BubbleType>(rand() % 5), Point(this->getContentSize().width / 2, bubbleSize / 2), Size(bubbleSize, bubbleSize));
-//		new BubbleNode(static_cast<BubbleType>(rand() % 5),Point(this->getContentSize().width/2,bubbleSize/2),Size(bubbleSize,bubbleSize));
 	currentBubble->setBubbleState(BubbleState::READY);
 	this->addChild(currentBubble->getBubble());
 }
@@ -67,8 +59,5 @@ void ShootLayer::abandon() {
 	currentBubble->getBubble()->removeFromParent();
 	this->removeChild(currentBubble->getBubble(), true);
 	BubbleFactory::getFactory().recycle(currentBubble);
-	
-	 loadBubble();
-	
-	
+	loadBubble();
 }
