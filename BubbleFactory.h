@@ -25,7 +25,7 @@ public:
 	BubbleNode* generateBubble(BubbleType type, cocos2d::Point position, cocos2d::Size size);
 	void recycle();
 	void recycle(BubbleNode* node);
-	~BubbleFactory();
+	~BubbleFactory() {};
 	void topListPopFront();
 
 private:
@@ -35,7 +35,7 @@ private:
 	std::list<BubbleNode*> potentialAttachPositions;
 	std::list<BubbleNode*> pool;
 	BubbleFactory(BubbleFactory const&) {};
-	void operator=(const BubbleFactory&);
+	void operator=(const BubbleFactory&) {};
 	static BubbleFactory* factory;
 
 };

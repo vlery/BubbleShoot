@@ -4,12 +4,10 @@
 #include "cocos2d.h"
 #include "BubbleType.h"
 #include <string>
+#include "Config.h"
 class Bulk;
 class BubbleFactory;
-const static int SHOOT_SPEED = 10;
-const unsigned int RESOURCE_BUBBLE_SIZE=200;
-const unsigned int NEIGHBOUR_NUMBER = 6;
-const static bool BUBBLE_DEBUG = true;
+
 enum class ConnectType{
 	LeftTop=0, RightTop, Left, Right, LeftBottom, RightBottom
 };
@@ -22,16 +20,10 @@ ConnectType opposite(ConnectType type);
 
 class BubbleNode{
 public:
+	friend class BubbleFactory;
 	BubbleNode* connect[6];
 	static ConnectType  connectType[6];
-/*
-	BubbleNode* LeftTop = nullptr;
-	BubbleNode* RightTop = nullptr;
-	BubbleNode* Left = nullptr;
-	BubbleNode* Right = nullptr;
-	BubbleNode* LeftBottom = nullptr;
-	BubbleNode* RightBottom = nullptr;
-*/
+
 	cocos2d::Vec2 velocity;
 
 	//BubbleNode();
@@ -48,7 +40,7 @@ public:
 	void setBulk(Bulk* bulk);
     void setPositions(cocos2d::Vec2 position);
 	cocos2d::Point getPosition() { return position; };
-	BubbleType getType() {return type;}
+
 	void select();
 	void unselect();
 	BubbleNode* getNeighbour(ConnectType type);
@@ -68,6 +60,12 @@ public:
 
 
 	void reset();
+	bool isDead();
+	bool isAttached();
+	bool isSameType(BubbleNode* node);
+	bool isTopBoundry();
+	bool ifBelongToSameBulk(BubbleNode* node);
+	bool isPotentialAttach();
 private:
 	cocos2d::Point position;
 	cocos2d::Sprite* bubble;
@@ -79,6 +77,7 @@ private:
 	Bulk* bulk=nullptr;
 	void bubbleAttachUpdate(float time);
 	BubbleNode* getNeighbourByConnectType(ConnectType type);
+	BubbleType getType() { return type; }
     
 };
 

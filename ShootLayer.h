@@ -1,7 +1,7 @@
 #ifndef SHOOT_LAYER_H
 #define SHOOT_LAYER_H
-#define PI 3.14159265
 
+#include "Config.h"
 #include "cocos2d.h"
 #include "BubbleNode.h"
 #include "BubbleFactory.h"

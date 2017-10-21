@@ -4,11 +4,7 @@
 #include "BubbleNode.h"
 #include "cocos2d.h"
 #include "BubbleFactory.h"
-#define OFFSET_UP_LEFT Vec2(-1, SQRT_3)
-#define OFFSET_UP_RIGHT Vec2(1, SQRT_3)
-#define OFFSET_BOTTOM_RIGHT Vec2(1, -SQRT_3)
-#define OFFSET_BOTTOM_LEFT  Vec2(-1, -SQRT_3)
-const static float SQRT_3 = 1.73205;
+#include "Config.h"
 
 
 

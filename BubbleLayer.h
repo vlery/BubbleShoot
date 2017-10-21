@@ -4,8 +4,6 @@
 #include "HexMap.h"
 #include <list>
 #include "BubbleFactory.h"
-const static float ANM_TIME = 0.8f;
-const static float SQRT_2 = 1.414f;
 
 
 class BubbleLayer : public cocos2d::Layer{
@@ -19,15 +17,17 @@ public:
 	void setWidth(float width);
 	void initBubbles(int bubbleSize, int layer);
 	void addLayer();
+
 	//test
 	void setOriginSelect();
 	void moveSelect(ConnectType type);
+	
+	
+	
 	void processShootBubble(BubbleNode* node);
 	
-
-	void testAttach(BubbleNode* node);
-	void attachBubble(BubbleNode* node, BubbleNode* attachNode);
-	void cleanShootList();
+	
+	
 	void checkThreeMatch(BubbleNode* node, BubbleNode* attachNode);
 private:
 	HexMap* hexmap;
@@ -36,6 +36,10 @@ private:
 	void moveDown();
 	BubbleNode* select=nullptr;
 	std::list<BubbleNode*> shootList;
-
+	void testAttach(BubbleNode* node);
+	void attachBubble(BubbleNode* node, BubbleNode* attachNode);
+	void cleanShootList();
+	void generateAttachReplace(BubbleNode* node);
+	
 };
 #endif // !BubbleLayer#pragma once

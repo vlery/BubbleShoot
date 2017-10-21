@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <exception>
 USING_NS_CC;
-
+ConnectType  BubbleNode::connectType[] = { ConnectType::LeftTop,ConnectType::RightTop,
+																	ConnectType::Left, ConnectType::Right,
+																ConnectType::LeftBottom, ConnectType::RightBottom };
 ConnectType reflectY(ConnectType type) {
 	switch (type) {
 	case ConnectType::LeftTop:
@@ -42,9 +44,7 @@ ConnectType opposite(ConnectType type) {
 }
 
 
-ConnectType  BubbleNode::connectType[] = { ConnectType::LeftTop,ConnectType::RightTop,
-																		ConnectType::Left, ConnectType::Right,
-																		ConnectType::LeftBottom, ConnectType::RightBottom }; 
+
 BubbleNode::BubbleNode(BubbleType type) {
 	this->type = type;
 	init();
@@ -92,10 +92,11 @@ void BubbleNode::connectBubble(ConnectType type,BubbleNode* node){
 }
 
 void BubbleNode::disConnectBubble(ConnectType ctype, BubbleNode* node) {
-	if (node->getType() == BubbleType::Boundry_Top&&node->getType()!=getType()) {
+	if (node->isTopBoundry() &&! node->isSameType(this)) {
 		bulk->disConnectToTop();
 	}
-	if (type == BubbleType::Boundry_Top&&node->getType() != getType()) {
+	
+	if (isTopBoundry() &&!node->isSameType(this)) {
 		node->getBulk()->disConnectToTop();
 	}
 	node->connect[(int)opposite(ctype)] = nullptr;
@@ -103,12 +104,7 @@ void BubbleNode::disConnectBubble(ConnectType ctype, BubbleNode* node) {
 }
 
 
-bool BubbleNode::isBubble() {
-	if (type <= BubbleType::Bubble_PINK) {
-		return true;
-	}
-	return false;
-}
+
 
 void BubbleNode::registerBulk() {
 	bulk = new Bulk(getType());
@@ -174,15 +170,11 @@ BubbleNode* BubbleNode::getNeighbour(ConnectType type) {
 	return connect[(int)type];
 }
 void BubbleNode::extendAllConnectionFrom(BubbleNode* fromNode) {
-	
-	
 	for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
-		ConnectType  type = connectType[i];
-		int type_i = (int)type;
-		if (fromNode->connect[type_i] != nullptr) {
-			auto connectTo = fromNode->connect[type_i];
-			fromNode->disConnectBubble(type, connectTo);
-			connectBubble(type, connectTo);
+		auto connectTo = fromNode->getNeighbour(connectType[i]);
+		if (connectTo != nullptr) {
+			fromNode->disConnectBubble(connectType[i], connectTo);
+			connectBubble(connectType[i], connectTo);
 		}
 
 	}
@@ -190,14 +182,11 @@ void BubbleNode::extendAllConnectionFrom(BubbleNode* fromNode) {
 
 void BubbleNode::extendOuterConnectionFrom(BubbleNode* fromNode) {
 	for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
-		ConnectType  type = connectType[i];
-		int type_i = (int)type;
-		if (fromNode->connect[type_i] != nullptr) {
-	
-				auto connectTo = fromNode->connect[type_i];
-				fromNode->disConnectBubble(type, connectTo);
-				connectBubble(type, connectTo);
-				if (connectTo->getType() != BubbleType::Boundry_Top) {
+		auto connectTo = fromNode->getNeighbour(connectType[i]);
+		if (connectTo != nullptr) {
+				fromNode->disConnectBubble(connectType[i], connectTo);
+				connectBubble(connectType[i], connectTo);
+				if (!connectTo->isTopBoundry()) {
 					connectTo->getBulk()->removeConnectBulk(fromNode->getBulk());
 				}
 		}
@@ -206,27 +195,13 @@ void BubbleNode::extendOuterConnectionFrom(BubbleNode* fromNode) {
 }
 
 
-	
-	/*for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
-		ConnectType  type = connectType[i];
-		int type_i = (int)type;
-		if (fromNode->connect[type_i] != nullptr) {
-			auto neighbour = fromNode->connect[type_i];
-			if (neighbour->isBubble() || neighbour->getType() == BubbleType::Boundry_Top) {
-				auto connectTo = fromNode->connect[type_i];
-				fromNode->disConnectBubble(type, connectTo, true);
-				connectBubble(type, connectTo);
-			}
-		}
 
-	}*/
 
 void BubbleNode::removeAllConnection() {
 	for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
-		ConnectType  type = connectType[i];
-		int type_i = (int)type;
-		if (connect[type_i] != nullptr) {
-			this->disConnectBubble(type, connect[(int)type]);
+		auto connectTo =getNeighbour(connectType[i]);
+		if (connectTo != nullptr) {
+			this->disConnectBubble(connectType[i], connectTo);
 		}
 	}
 }
@@ -237,21 +212,19 @@ void 	BubbleNode::moveForward() {
 }
 
 
-void BubbleNode::attachTo(Point position, std::function<void(BubbleNode* node,BubbleNode* attach)> detect, BubbleNode* param1, BubbleNode* param2) {
+void BubbleNode::attachTo(Point position, std::function<void(BubbleNode* node,BubbleNode* attach)> detect, BubbleNode* node, BubbleNode* attach) {
 		
-		auto callback= CallFunc::create([this,detect,param1,param2]() {
+		auto callback= CallFunc::create([this,detect,node,attach]() {
 			this->position.x = bubble->getPosition().x;
 			this->position.y = bubble->getPosition().y;
 			this->nextState();
-			//this->select();
-			detect(param1,param2);
+			detect(node,attach);
 		});
 		Vec2 velocityDir = velocity;
 		velocityDir.normalize();
 	
 		ccBezierConfig bezier;
 		bezier.controlPoint_1 = 2*velocityDir;
-		
 		bezier.endPosition = position-this->position;
 		bezier.controlPoint_2 =bezier.endPosition;
 		auto bezierForward = BezierBy::create(2/velocity.length() , bezier);
@@ -271,19 +244,20 @@ void BubbleNode::nextState() {
 
 void BubbleNode::destorySelf() {
 	for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
-		ConnectType type = connectType[i];
-		int type_i = (int)type;
-		if (connect[type_i] != nullptr) {
-			disConnectBubble(type, connect[type_i]);
+		auto connectTo = getNeighbour(connectType[i]);
+		
+		if (connectTo != nullptr) {
+			disConnectBubble(connectType[i], connectTo);
 		}
 	}
 
 	auto callback = CallFunc::create([this]() {
 		this->getBubble()->removeFromParent();
-		this->nextState();
+		
 	});
 	if (isBubble()) {
-		bubble->runAction(Sequence::create(MoveBy::create(1, Vec2(0, -20)), callback, nullptr));
+		this->nextState();
+		bubble->runAction(Sequence::create(MoveBy::create(1, Vec2(0, -1000)), callback, nullptr));
 	}
 	else {
 		this->getBubble()->removeFromParent();
@@ -304,4 +278,33 @@ BubbleNode* BubbleNode::getNeighbourByConnectType(ConnectType type) {
 
 void BubbleNode::removeAllBulkConnection() {
 	bulk->removeAllConnection();
+}
+
+bool BubbleNode::isDead() {
+	return bubbleState == BubbleState::DEAD;
+}
+
+bool BubbleNode::isAttached() {
+	return bubbleState== BubbleState::ATTACH;
+}
+
+bool BubbleNode::isSameType(BubbleNode* node) {
+	return type == node->type;
+}
+
+bool BubbleNode::isTopBoundry() {
+	return type == BubbleType::Boundry_Top;
+}
+
+bool BubbleNode::ifBelongToSameBulk(BubbleNode* node) {
+	return bulk == node->bulk;
+}
+
+bool BubbleNode::isPotentialAttach() {
+	return type == BubbleType::Boundry_Attach;
+}
+
+bool BubbleNode::isBubble() {
+	return type <= BubbleType::Bubble_PINK;
+
 }

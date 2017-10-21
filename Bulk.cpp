@@ -191,7 +191,7 @@ BubbleNode* Bulk::getFirstConnectOuterNode() {
 		for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
 			auto neighbour = node->connect[(int)node->connectType[i]];
 			if (neighbour != nullptr) {
-				if (neighbour->isBubble() || neighbour->getType() == BubbleType::Boundry_Top) {
+				if (neighbour->isBubble() || neighbour->isTopBoundry()) {
 					return node;
 				}
 			}
@@ -208,7 +208,7 @@ bool Bulk::ifHasNextConnectOuterNode() {
 		for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
 			auto neighbour = node->connect[(int)node->connectType[i]];
 			if (neighbour != nullptr) {
-				if (neighbour->isBubble() || neighbour->getType() == BubbleType::Boundry_Top) {
+				if (neighbour->isBubble() || neighbour->isTopBoundry()) {
 					return true;
 				}
 			}
