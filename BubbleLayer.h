@@ -29,7 +29,7 @@ public:
 	
 	
 	void checkThreeMatch(BubbleNode* node, BubbleNode* attachNode);
-private:
+private: 
 	HexMap* hexmap;
 	float width;
 	float bubbleSize;
@@ -37,6 +37,8 @@ private:
 	BubbleNode* select=nullptr;
 	std::list<BubbleNode*> shootList;
 	void testAttach(BubbleNode* node);
+	void testAttach1(BubbleNode* node);
+	void testAttach_ByBubble(BubbleNode* node);
 	void attachBubble(BubbleNode* node, BubbleNode* attachNode);
 	void cleanShootList();
 	void generateAttachReplace(BubbleNode* node);

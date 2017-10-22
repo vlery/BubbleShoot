@@ -55,10 +55,7 @@ public:
 	void nextState();
 
 	void attachTo(cocos2d::Point position, std::function<void(BubbleNode* node, BubbleNode* attach)> detect,BubbleNode* param1,BubbleNode* param2);
-
 	void destorySelf();
-
-
 	void reset();
 	bool isDead();
 	bool isAttached();
@@ -66,6 +63,7 @@ public:
 	bool isTopBoundry();
 	bool ifBelongToSameBulk(BubbleNode* node);
 	bool isPotentialAttach();
+	BubbleNode* attachTarget=nullptr;
 private:
 	cocos2d::Point position;
 	cocos2d::Sprite* bubble;
@@ -76,7 +74,7 @@ private:
 	Bulk* bulk=nullptr;
 	BubbleNode* getNeighbourByConnectType(ConnectType type);
 	BubbleType getType() { return type; }
-    
+	
 };
 
 bool rowSort( BubbleNode* a, BubbleNode* b);

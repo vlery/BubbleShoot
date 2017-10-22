@@ -93,11 +93,24 @@ void BubbleNode::connectBubble(ConnectType type,BubbleNode* node){
 
 void BubbleNode::disConnectBubble(ConnectType ctype, BubbleNode* node) {
 	if (node->isTopBoundry() &&! node->isSameType(this)) {
+		if (isPotentialAttach()) {
+			node->bulk->disConnectToAttach();
+		}
 		bulk->disConnectToTop();
 	}
 	
 	if (isTopBoundry() &&!node->isSameType(this)) {
+		if (node->isPotentialAttach()) {
+			bulk->disConnectToAttach();
+		}
 		node->getBulk()->disConnectToTop();
+	}
+
+	if (node->isPotentialAttach() && isBubble()) {
+		bulk->disConnectToAttach();
+	}
+	if (isPotentialAttach() &&node-> isBubble()) {
+		node->bulk->disConnectToAttach();
 	}
 	node->connect[(int)opposite(ctype)] = nullptr;
 	connect[(int)ctype] = nullptr;
@@ -113,25 +126,40 @@ void BubbleNode::registerBulk() {
 
 void BubbleNode::connectBulk( BubbleNode* node) {
 
-	if (node->getType() == BubbleType::Boundry_Top) {
-		if (node->getType() != getType()) {
+	if (node->isTopBoundry()) {
+		if(!node->isSameType(this)){
 			bulk->connectToTop();
+		}
+		if (isPotentialAttach()) {
+			node->bulk->connectToAttach();
 		}
 		return;
 	}
-	if (type == BubbleType::Boundry_Top) {
-		if (node->getType() != getType()) {
+	if (isTopBoundry()) {
+		if (!node->isSameType(this)) {
 			node->getBulk()->connectToTop();
+		}
+		if (node->isPotentialAttach()) {
+			bulk->connectToAttach();
 		}
 		return;
 	}
 
-	if (type != node->getType()) {
+
+
+	if (!node->isSameType(this)) {
 		bulk->addConnectBulk(node->getBulk());
 		node->getBulk()->addConnectBulk(bulk);
+		
+		if (node->isPotentialAttach()) {
+			bulk->connectToAttach();
+		}
+		if (isPotentialAttach()) {
+			node->bulk->connectToAttach();
+		}
 	}
 	else {
-		if (isBubble()&&bulk!=node->getBulk()) {
+		if (isBubble()&&!node->ifBelongToSameBulk(this)) {
 			bulk->absorb(node->getBulk());
 		}
 	}
@@ -157,6 +185,9 @@ void BubbleNode::select() {
 		//CCLOG("currentNode, connection:%d", getBulk()->getConnection());
 		if (BUBBLE_DEBUG) {
 			CCLOG("currentNode, bulk nodeNum:%d", getBulk()->getNodeNum());
+			CCLOG("currentNode, Top connect:%d", (int)getBulk()->connectTopCount);
+			CCLOG("currentNode, Attach connect:%d", (int)getBulk()->connectAttachCount);
+
 		}
 	}
 	
@@ -277,6 +308,7 @@ void BubbleNode::reset() {
 	if (bubble->getParent() != nullptr) {
 		bubble->removeFromParent();
 	}
+	attachTarget = nullptr;
 }
 
 

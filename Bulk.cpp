@@ -42,7 +42,7 @@ void combineUnboundBulkAround(Bulk* bulk) {
 		bool ifConnectToTop = false;
 		auto testItr = in.begin();
 		while(testItr!=in.end()){ 
-			if ((*testItr)->ifConnectTop()) {
+			if ((*testItr)->getType()!=BubbleType::Boundry_Attach&&(*testItr)->ifConnectTop()) {
 				ifConnectToTop = true;
 				break;
 			}
@@ -80,12 +80,13 @@ void combineUnboundBulkAround(Bulk* bulk) {
 }
 
 
-Bulk::Bulk() :nodeNum(0), connectTopCount(0){};
+Bulk::Bulk() :nodeNum(0), connectTopCount(0), connectAttachCount(0){};
 
 Bulk::Bulk(BubbleType type) {
 	nodeNum = 0;
 	this->type = type;
 	connectTopCount = 0;
+	connectAttachCount = 0;
 }
 void Bulk::attach(BubbleNode* bubble) {
 	bubbles.push_back(bubble);
@@ -130,6 +131,7 @@ void Bulk::detachAll() {
 void Bulk::absorb(Bulk* bulk_delete) {
 	nodeNum += bulk_delete->nodeNum;
 	connectTopCount += bulk_delete->connectTopCount;
+	connectAttachCount += bulk_delete->connectAttachCount;
 	std::for_each(bulk_delete->bubbles.begin(), bulk_delete->bubbles.end(), [this](BubbleNode* node) {
 		node->setBulk(this);
 	});
