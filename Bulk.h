@@ -42,11 +42,15 @@ public:
 	void connectToTop() {++connectTopCount;}
 	void disConnectToTop() { --connectTopCount; }
 	bool ifConnectTop() { return (connectTopCount>0); }
-
+	bool ifConnectAttach() { return (connectAttachCount>0); }
+	void connectToAttach() { ++connectAttachCount; }
+	void disConnectToAttach() { --connectAttachCount; }
+		 int connectTopCount;
+	 int connectAttachCount;
 private:
 	
 	std::list<BubbleNode*> bubbles;
-	 int connectTopCount;
+
 	BubbleType type;
 	int nodeNum;
 	std::list<BubbleNode*>::iterator connectOutItr;

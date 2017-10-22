@@ -3,7 +3,8 @@
 USING_NS_CC;
 
 bool isSamePos(Point p1, Point p2) {
-	return ((int)p1.x == (int)p2.x && (int)p1.y == (int)p2.y);
+
+	return (abs(p1.x - p2.x)<2 && abs(p1.y - p2.y)<2);
 }
 HexMap::HexMap(float size, float width, int layer) {
 	this->size = size;
@@ -150,9 +151,9 @@ BubbleNode* HexMap::createBubbleToList(BubbleType type, Point pos) {
 	auto node=BubbleFactory::getFactory().generateBubble(type, pos, Size(size, size));
 	node->setBubbleState(BubbleState::ATTACH);
 	BubbleFactory::getFactory().addInList(node);
-	if (!node->isTopBoundry()) {
-		node->registerBulk();
-	}
+
+	node->registerBulk();
+	
 	return node;
 }
 
