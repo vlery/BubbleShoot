@@ -1,4 +1,4 @@
-<h3>bubble shoot based on cocos2d</h3>
+<h3>BB_S based on CCS2D</h3>
 
 Operation
 <ul>
