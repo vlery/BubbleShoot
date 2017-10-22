@@ -4,7 +4,7 @@
 #define BUBBLE_IMG_PATH "asset/bubble.png"
 #define BUBBLE_DEFAULT_IMG_PATH "asset/default.png"
 #define  ARROW_IMG_PATH "asset/up-arrow.png"
-const static bool BUBBLE_DEBUG = false;
+const static bool BUBBLE_DEBUG = true;
 const static int CLEAN_INTERVAL = 1500;
 
 

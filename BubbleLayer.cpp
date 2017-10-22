@@ -50,10 +50,10 @@ void BubbleLayer::initBubbles(int bubbleSize,int layer) {
 
 }
 void BubbleLayer::addBubbles() {
-	removeAllChildren();
+
 	auto list =BubbleFactory::getFactory().getBubblesList();
 	std::for_each(list.begin(), list.end(), [=](BubbleNode* node) {
-		if (!node->isDead()) {
+		if (!node->isDead()&&node->getBubble()->getParent()==nullptr) {
 			addChild(node->getBubble());
 		}
 	});
@@ -61,7 +61,7 @@ void BubbleLayer::addBubbles() {
 
 	list = BubbleFactory::getFactory().getAttachList();
 	std::for_each(list.begin(), list.end(), [=](BubbleNode* node) {
-		if (!node->isDead()) {
+		if (!node->isDead() && node->getBubble()->getParent() == nullptr) {
 			addChild(node->getBubble());
 		}
 	}
@@ -69,17 +69,13 @@ void BubbleLayer::addBubbles() {
 
 	list = BubbleFactory::getFactory().getTopList();
 	std::for_each(list.begin(), list.end(), [=](BubbleNode* node) {
-		if (!node->isDead()) {
+		if (!node->isDead() && node->getBubble()->getParent() == nullptr) {
 			addChild(node->getBubble());
 		}
 	}
 	);
+	
 
-	std::for_each(shootList.begin(), shootList.end(), [=](BubbleNode* node) {
-		if (node->getState() == BubbleState::SHOOT) {
-			addChild(node->getBubble());
-		}
-	});
 }
 
 
