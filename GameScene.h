@@ -2,7 +2,6 @@
 #define  _GAME_SCENE_H
 #include "cocos2d.h"
 
-#include "HexMap.h"
 #include "BubbleLayer.h"
 #include "ShootLayer.h"
 #include "Config.h"

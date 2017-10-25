@@ -2,8 +2,8 @@
 #define BUBBLE_LAYER_H
 #include "cocos2d.h"
 #include "HexMap.h"
-#include <list>
 #include "BubbleFactory.h"
+#include "Bulk.h"
 
 
 class BubbleLayer : public cocos2d::Layer{
@@ -43,6 +43,11 @@ private:
 	void cleanShootList();
 	void generateAttachReplace(BubbleNode* node);
 	int cleanTimer = 0;
-	
+
+	void updateBubbleVisibility(BubbleNode* node);
+	bool testAttachInList(BubbleNode* node, BubbleNode* shootBubble, float largeDistance);
 };
+
+
+
 #endif // !BubbleLayer#pragma once

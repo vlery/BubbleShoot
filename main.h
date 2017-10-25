@@ -12,5 +12,5 @@
 #include "platform/CCStdC.h"
 
 
-
+#include "Config.h"
 #endif    // __MAIN_H__

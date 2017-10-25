@@ -3,6 +3,12 @@
 #include "BubbleNode.h"
 #include "cocos2d.h"
 #include <list>
+#include <algorithm>
+enum class ListType {
+	TOP,BUBBLE,ATTACH,POOL
+};
+BubbleNode* getFirstMatchBubble(std::list<BubbleNode*>* list, std::function<bool(BubbleNode*)> test);
+
 
 class BubbleFactory {
 public:

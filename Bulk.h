@@ -6,11 +6,11 @@
 #include <list>
 
 void combineUnboundBulkAround(Bulk* bulk);
-
+bool ifOuterConnection(BubbleNode* neighbour,Bulk* bulk);
 class Bulk {
 public:
 
-	Bulk();
+
 	Bulk(BubbleType type);
 
 	void attach(BubbleNode* bubble);
@@ -22,6 +22,7 @@ public:
 	void select();
 	void unselect();
 	void absorb(Bulk* bulk);
+	
 	int getNodeNum() {
 		return nodeNum;
 	}
@@ -45,16 +46,17 @@ public:
 	bool ifConnectAttach() { return (connectAttachCount>0); }
 	void connectToAttach() { ++connectAttachCount; }
 	void disConnectToAttach() { --connectAttachCount; }
-		 int connectTopCount;
-	 int connectAttachCount;
-private:
 	
+private:
+	Bulk();
 	std::list<BubbleNode*> bubbles;
-
+	int connectTopCount=0;
+	int connectAttachCount=0;
 	BubbleType type;
-	int nodeNum;
+	int nodeNum=0;
 	std::list<BubbleNode*>::iterator connectOutItr;
 	std::list<Bulk*> connectBulkList;
+	void extendCountParameters(Bulk* bulk);
 };
 
 

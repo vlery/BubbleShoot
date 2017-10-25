@@ -3,20 +3,22 @@
 #define BUBBLE_NODE_H
 #include "cocos2d.h"
 #include "BubbleType.h"
-#include <string>
 #include "Config.h"
+
 class Bulk;
-class BubbleFactory;
+
 
 enum class ConnectType{
 	LeftTop=0, RightTop, Left, Right, LeftBottom, RightBottom
 };
 enum class BubbleState {
-	READY, SHOOT,CONNECT,ATTACH,DEAD
+	READY, SHOOT,CONNECT,ATTACH,FALL,DEAD
 };
 
 ConnectType reflectY(ConnectType type);
 ConnectType opposite(ConnectType type);
+
+
 
 class BubbleNode{
 public:
@@ -63,7 +65,10 @@ public:
 	bool isTopBoundry();
 	bool ifBelongToSameBulk(BubbleNode* node);
 	bool isPotentialAttach();
+	bool isInShoot();
 	BubbleNode* attachTarget=nullptr;
+	
+
 private:
 	cocos2d::Point position;
 	cocos2d::Sprite* bubble;
@@ -78,4 +83,7 @@ private:
 };
 
 bool rowSort( BubbleNode* a, BubbleNode* b);
+bool testAroundBubble(BubbleNode* node, std::function<bool(BubbleNode* node)> test);
 #endif // !BUBBLE_NODE_H
+
+

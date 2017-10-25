@@ -1,10 +1,10 @@
 #pragma once
 #ifndef CONFIG_H
 #define CONFIG_H
-#define BUBBLE_IMG_PATH "asset/bubble.png"
+#define BUBBLE_IMG_PATH "asset/bubble_small.png"
 #define BUBBLE_DEFAULT_IMG_PATH "asset/default.png"
 #define  ARROW_IMG_PATH "asset/up-arrow.png"
-const static bool BUBBLE_DEBUG = false;
+const static bool BUBBLE_DEBUG = true;
 const static int CLEAN_INTERVAL = 1500;
 
 
@@ -31,7 +31,7 @@ const static int INIT_BUBBLE_SIZE = 60;
 const static int INIT_MAP_WIDTH = 360;
 const static float BORDER_COLOR[4] = { 0.4,0.4,0.4,1 };
 const static int BG_COLOR[4] = { 255, 204, 153, 200 };
-const unsigned int RESOURCE_BUBBLE_SIZE = 200;
+const unsigned int RESOURCE_BUBBLE_SIZE = 80;
 const unsigned int NEIGHBOUR_NUMBER = 6;
 
 
@@ -42,7 +42,7 @@ const unsigned int NEIGHBOUR_NUMBER = 6;
 #define SQRT_3  1.73205
 #define PI 3.14159265
 
-const static float LARGE_DISTANCE_TEST = 1.4f;
+const static float LARGE_DISTANCE_TEST = 1.2f;
 const static float LARGE_DISTANCE_TEST_ANGLE_COS = 0.9f;
 
 const static float MEDIUM_DISTANCE_TEST = 0.7f;

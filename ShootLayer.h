@@ -1,10 +1,10 @@
 #ifndef SHOOT_LAYER_H
 #define SHOOT_LAYER_H
 
-#include "Config.h"
 #include "cocos2d.h"
 #include "BubbleNode.h"
 #include "BubbleFactory.h"
+
 
 class ShootLayer: public cocos2d::Layer {
 

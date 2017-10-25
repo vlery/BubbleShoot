@@ -1,5 +1,5 @@
 #include "BubbleLayer.h"
-#include "Bulk.h"
+
 USING_NS_CC;
 bool BubbleLayer::init() {
 	if (!Layer::init()) {
@@ -14,9 +14,7 @@ void BubbleLayer::update(float delta) {
 		auto begin = shootList.begin();
 		auto end = shootList.end();
 		std::for_each(begin, end,[=](BubbleNode* node) {
-			if (node->getState() == BubbleState::SHOOT) {
-				
-			
+			if (node->isInShoot()) {
 					if (node->getPosition().x <= bubbleSize / 2) {
 						node->velocity.x *= -1;
 						node->attachTarget = nullptr;
@@ -51,31 +49,33 @@ void BubbleLayer::initBubbles(int bubbleSize,int layer) {
 	}
 
 }
+void BubbleLayer::updateBubbleVisibility(BubbleNode* node) {
+	if (!node->isDead()) {
+		if (node->getBubble()->getParent() == nullptr) {
+			addChild(node->getBubble());
+		}
+	}
+	else {
+		node->getBubble()->removeFromParent();
+	}
+}
 void BubbleLayer::addBubbles() {
 
 	auto list =BubbleFactory::getFactory().getBubblesList();
-	std::for_each(list.begin(), list.end(), [=](BubbleNode* node) {
-		if (!node->isDead()&&node->getBubble()->getParent()==nullptr) {
-			addChild(node->getBubble());
-		}
+	std::for_each(list.begin(), list.end(), [this](BubbleNode* node) {
+		this->updateBubbleVisibility(node);
 	});
 
 
 	list = BubbleFactory::getFactory().getAttachList();
-	std::for_each(list.begin(), list.end(), [=](BubbleNode* node) {
-		if (!node->isDead() && node->getBubble()->getParent() == nullptr) {
-			addChild(node->getBubble());
-		}
-	}
-	);
+	std::for_each(list.begin(), list.end(), [this](BubbleNode* node) {
+		this->updateBubbleVisibility(node);
+	});
 
 	list = BubbleFactory::getFactory().getTopList();
-	std::for_each(list.begin(), list.end(), [=](BubbleNode* node) {
-		if (!node->isDead() && node->getBubble()->getParent() == nullptr) {
-			addChild(node->getBubble());
-		}
-	}
-	);
+	std::for_each(list.begin(), list.end(), [this](BubbleNode* node) {
+		this->updateBubbleVisibility(node);
+	});
 	
 
 }
@@ -140,7 +140,7 @@ void BubbleLayer::setOriginSelect() {
 	auto list = BubbleFactory::getFactory().getAttachList();
 	auto itr = list.begin();
 	while (itr != list.end()) {
-		if (!(*itr)->isDead()) {
+		if ((*itr)->isAttached()) {
 			select = (*itr);
 			select->select();
 			break;
@@ -162,13 +162,13 @@ void BubbleLayer::processShootBubble(BubbleNode* bubble) {
 /*
 *testAttach and testAttach1 use potential attach set
 */
+/*
 void BubbleLayer::testAttach(BubbleNode* node) {
 	float boundry_L = LARGE_DISTANCE_TEST*bubbleSize;
 	float boundry_M= bubbleSize *MEDIUM_DISTANCE_TEST ;
 	auto attacList = BubbleFactory::getFactory().getAttachList();
 	auto itr = attacList.begin();
 	while (itr!= attacList.end()) {
-
 		if (!(*itr)->isDead()) {
 			Point attachPos = (*itr)->getPosition();
 			Point nodePos = node->getPosition();
@@ -328,103 +328,84 @@ void BubbleLayer::testAttach1(BubbleNode* node) {
 
 
 }
+*/
 
+bool BubbleLayer::testAttachInList(BubbleNode* bbInList, BubbleNode* shootBubble, float largeDistance) {
+	if (!bbInList->isAttached()) {
+		return false;
+	}
 
+	Point bbPos = bbInList->getPosition();
+	Point nodePos = shootBubble->getPosition();
+	if (!bbInList->getBulk()->ifConnectAttach()) {
+		return false;
+	}
+	if (abs(bbPos.x - nodePos.x) + abs(bbPos.y - nodePos.y) > largeDistance) {
+		return false;
+	}
 
+	float distance = bbPos.distance(nodePos);
+	float dot = -1;
+
+	if (distance < bubbleSize) {
+		float attach2node = 3 * bubbleSize;
+		BubbleNode* nearestAttach = nullptr;
+		for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
+			auto neighbour = bbInList->getNeighbour(bbInList->connectType[i]);
+			if (neighbour != nullptr&&neighbour->isPotentialAttach()) {
+				float a2n = nodePos.getDistance(neighbour->getPosition());
+				if (a2n < attach2node) {
+					nearestAttach = neighbour;
+					attach2node = a2n;
+				}
+			}
+
+		}
+		shootBubble->nextState();
+		if (nearestAttach != nullptr) {
+			if (!nearestAttach->isAttached()) {
+				auto zz = nearestAttach;
+			}
+			attachBubble(shootBubble, nearestAttach);
+			if (BUBBLE_DEBUG) {
+				CCLOG("AttachWay: nearest Attach of collision Bubble");
+			}
+		}
+		return true;
+
+	}
+	return false;
+}
 void BubbleLayer::testAttach_ByBubble(BubbleNode* node) {
-	float boundry_L = LARGE_DISTANCE_TEST*bubbleSize;
+	float boundry_L = 1.5f*bubbleSize;
 	auto bubbleList = BubbleFactory::getFactory().getBubblesList();
 	auto bb_itr = bubbleList.begin();
 	Point nodePos = node->getPosition();
 	while (bb_itr != bubbleList.end()) {
-		auto bb = (*bb_itr);
-		Point bbPos = bb->getPosition();
-
-		if (!bb->getBulk()->ifConnectAttach()) {
-			++bb_itr;
-			continue;
-		}
-		if (abs(bbPos.x - nodePos.x) + abs(bbPos.y - nodePos.y) > boundry_L) {
-			++bb_itr;
-			continue;
-		}
-
-		float distance = bbPos.distance(nodePos);
-		float dot = -1;
 		
-		if (distance < bubbleSize) {
-			float attach2node = 3 * bubbleSize;
-			BubbleNode* nearestAttach = nullptr;
-			for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
-				auto neighbour = bb->getNeighbour(bb->connectType[i]);
-				if (neighbour!=nullptr&&neighbour->isPotentialAttach()) {
-					float a2n = nodePos.getDistance(neighbour->getPosition());
-					if (a2n < attach2node) {
-						nearestAttach = neighbour;
-						attach2node = a2n;
-					}
-				}
-				
-			}
-			node->nextState();
-			attachBubble(node,nearestAttach);
-			if (BUBBLE_DEBUG) {
-				CCLOG("AttachWay: nearest Attach of collision Bubble");
-			}
+		auto ifSuccess = testAttachInList(*bb_itr, node, boundry_L);
+		if (!ifSuccess) {
+			++bb_itr;
+			continue;
+		}
+		else {
 			break;
-		
 		}
-
-
-
-		++bb_itr;
 	}
-
+	
 	 bubbleList = BubbleFactory::getFactory().getTopList();
 	 bb_itr = bubbleList.begin();
 
 	while (bb_itr != bubbleList.end()) {
-		auto bb = (*bb_itr);
-		Point bbPos = bb->getPosition();
-
-		if (!bb->getBulk()->ifConnectAttach()) {
+		auto ifSuccess = testAttachInList(*bb_itr, node, boundry_L);
+		if (!ifSuccess) {
 			++bb_itr;
 			continue;
 		}
-		if (abs(bbPos.x - nodePos.x) + abs(bbPos.y - nodePos.y) > boundry_L) {
-			++bb_itr;
-			continue;
-		}
-
-		float distance = bbPos.distance(nodePos);
-		float dot = -1;
-
-		if (distance < bubbleSize + 5) {
-			float attach2node = 3 * bubbleSize;
-			BubbleNode* nearestAttach = nullptr;
-			for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
-				auto neighbour = bb->getNeighbour(bb->connectType[i]);
-				if (neighbour != nullptr&&neighbour->isPotentialAttach()) {
-					float a2n = nodePos.getDistance(neighbour->getPosition());
-					if (a2n < attach2node) {
-						nearestAttach = neighbour;
-						attach2node = a2n;
-					}
-				}
-
-			}
-			node->nextState();
-			attachBubble(node, nearestAttach);
-			if (BUBBLE_DEBUG) {
-				CCLOG("AttachWay: nearest Attach of collision Bubble");
-			}
+		else {
 			break;
-
 		}
-
-
-
-		++bb_itr;
+		
 	}
 
 
@@ -446,7 +427,6 @@ void BubbleLayer::checkThreeMatch(BubbleNode* node, BubbleNode* attachNode) {
 	attachNode->getBulk()->removeAllConnection();
 	
 	bool ifShootBulk = (node->getBulk()->getNodeNum()>2);
-	BubbleNode* neighbour;
 	
 
 	if (ifShootBulk) {

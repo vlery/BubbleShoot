@@ -1,5 +1,23 @@
 #include "BubbleFactory.h"
+USING_NS_CC;
 BubbleFactory* BubbleFactory::factory = nullptr;
+
+BubbleNode* getFirstMatchBubble(std::list<BubbleNode*>* list, std::function<bool(BubbleNode*)> test) {
+	
+	auto itr = list->begin();
+	while (itr != list->end()) {
+		auto bb = *itr;
+		if (test(bb)) {
+			list->erase(itr);
+			return bb;
+		}
+		++itr;
+	}
+	return nullptr;
+
+}
+
+
 void BubbleFactory::addInList(BubbleNode* node) {
 	switch (node->getType()) {
 	case BubbleType::Boundry_Top:
@@ -32,7 +50,6 @@ void BubbleFactory::recycle() {
 			(*itr)->reset();
 			pool.push_back(*itr);
 			itr = potentialAttachPositions.erase(itr);
-			
 		}
 		else {
 			++itr;
@@ -43,64 +60,50 @@ void BubbleFactory::recycle() {
 
 void BubbleFactory::recycle(BubbleNode* node) {
 	node->reset();
+	pool.push_back(node);
 	if (node->isBubble()) {
-		auto itr = bubbles.begin();
-		while (itr != bubbles.end()) {
-			if (*itr == node) {
-				pool.push_back(*itr);
-				bubbles.erase(itr);
-				return;
-			}
-			++itr;
-		}
-		return;
-	}
-	if (node->getType()==BubbleType::Boundry_Attach) {
-		auto itr = potentialAttachPositions.begin();
-		while (itr != potentialAttachPositions.end()) {
-			if (*itr == node) {
-				pool.push_back(*itr);
-				potentialAttachPositions.erase(itr);
-				return;
-			}
-			++itr;
-		}
-		return;
-	}
-	if (node->getType() == BubbleType::Boundry_Top) {
-		auto itr = topBoundries.begin();
-		while (itr != topBoundries.end()) {
-			if (*itr == node) {
-				pool.push_back(*itr);
-				topBoundries.erase(itr);
-				return;
-			}
-			++itr;
-		}
-		return;
-	}
 
-
+		auto find_itr = std::find(bubbles.begin(),bubbles.end(), node);
+		if (find_itr != bubbles.end()) {
+			bubbles.erase(find_itr);
+			return;
+		}
+		return;
+	}
+	if (node->isPotentialAttach()) {
+		auto find_itr = std::find(potentialAttachPositions.begin(), potentialAttachPositions.end(), node);
+		if (find_itr != potentialAttachPositions.end()) {
+			potentialAttachPositions.erase(find_itr);
+			return;
+		}
+		return;
+	}
+	if (node->isTopBoundry()) {
+		auto find_itr = std::find(topBoundries.begin(), topBoundries.end(), node);
+		if (find_itr != topBoundries.end()) {
+			topBoundries.erase(find_itr);
+			return;
+		}
+		return;
+	}
 
 }
 BubbleNode* BubbleFactory::generateBubble(BubbleType type, cocos2d::Point position, cocos2d::Size size) {
 	if (pool.size() == 0) {
+		if (BUBBLE_DEBUG) {	
+			CCLOG("Total Bubbles:%d",pool.size() + topBoundries.size()+potentialAttachPositions.size()+bubbles.size());
+		}
 		return new BubbleNode(type, position, size);
 	}
-	else {
-		auto itr = pool.begin();
-		BubbleNode* node;
-		while (itr != pool.end()) {
-			if ((*itr)->getType() == type) {
-				node = *(itr);
-				pool.erase(itr);
-				node->setPositions(position);
-				//node->getBubble()->setContentSize(size);
-				return node;
-				
-			}
-			++itr;
+	else {	
+		auto find_bb = getFirstMatchBubble(&pool, [type](BubbleNode* node) {
+			return (node->getType() == type);
+		});
+		if (find_bb != nullptr) {
+			find_bb->setPositions(position);
+			return find_bb;
 		}
+		
 		return new BubbleNode(type, position, size);
 	}
 

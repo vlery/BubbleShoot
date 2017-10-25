@@ -1,10 +1,10 @@
 #include "HexMap.h"
-#include "Bulk.h"
+
 USING_NS_CC;
 
 bool isSamePos(Point p1, Point p2) {
 
-	return (abs(p1.x - p2.x)<2 && abs(p1.y - p2.y)<2);
+	return (abs(p1.x - p2.x)<3 && abs(p1.y - p2.y)<3);
 }
 HexMap::HexMap(float size, float width, int layer) {
 	this->size = size;
@@ -149,6 +149,9 @@ void HexMap::generateBubbleLayer() {
 
 BubbleNode* HexMap::createBubbleToList(BubbleType type, Point pos) {
 	auto node=BubbleFactory::getFactory().generateBubble(type, pos, Size(size, size));
+	if (node->getBubble()->getParent() != nullptr) {
+		auto z = node;
+	}
 	node->setBubbleState(BubbleState::ATTACH);
 	BubbleFactory::getFactory().addInList(node);
 
@@ -165,6 +168,8 @@ BubbleNode* HexMap::generateAttachReplace(BubbleNode* replace) {
 }
 
 void 	 HexMap::generateAttachNodeAround(BubbleNode* node) {
+	
+	
 	for (int i = 0; i < NEIGHBOUR_NUMBER; i++) {
 		ConnectType type = node->connectType[i];
 		int type_i = (int)type;
@@ -174,37 +179,40 @@ void 	 HexMap::generateAttachNodeAround(BubbleNode* node) {
 				continue;
 			}
 			bool ifConnect = false;
+			
 			auto attach_list = BubbleFactory::getFactory().getAttachList();
-			auto attach_itr = attach_list.begin();
-			while (attach_itr != attach_list.end()) {
-				if ((*attach_itr)->isDead()) {
-					++attach_itr;
-					continue;
+			auto find_bb=getFirstMatchBubble(&attach_list, [pos](BubbleNode* node) {
+				if (!node->isAttached()) {
+					return false;
 				}
-				else {
-					if(isSamePos((*attach_itr)->getPosition(),pos)){
-						node->connectBubble(type, (*attach_itr));
-						ifConnect = true;
-						break;
-					}
+				if (isSamePos(node->getPosition(), pos)) {
+					return true;
 				}
-				++attach_itr;
+				return false;
+			});
+
+			if (find_bb != nullptr) {
+				ifConnect = true;
+				node->connectBubble(type, find_bb);
 			}
+			
 			if (!ifConnect) {
 				auto bubble_list = BubbleFactory::getFactory().getBubblesList();
-				auto bubble_itr = bubble_list.begin();
-				while (bubble_itr != bubble_list.end()) {
-					if ((*bubble_itr)->isDead()) {
-						++bubble_itr;
-						continue;
+
+				auto find_bb = getFirstMatchBubble(&bubble_list, [pos](BubbleNode* node) {
+					if (!node->isAttached()) {
+						return false;
 					}
-					if (isSamePos((*bubble_itr)->getPosition(),pos)) {
-						node->connectBubble(type, (*bubble_itr));
-						ifConnect = true;
-						break;
+					if (isSamePos(node->getPosition(), pos)) {
+						return true;
 					}
-					++bubble_itr;
-				}
+					return false;
+				});
+				if (find_bb != nullptr) {
+				ifConnect = true;
+				node->connectBubble(type, find_bb);
+			}
+	
 			}
 		
 			if (!ifConnect) {

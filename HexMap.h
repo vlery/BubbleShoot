@@ -4,7 +4,8 @@
 #include "BubbleNode.h"
 #include "cocos2d.h"
 #include "BubbleFactory.h"
-#include "Config.h"
+
+
 
 
 bool isSamePos(cocos2d::Point p1, cocos2d::Point p2);
